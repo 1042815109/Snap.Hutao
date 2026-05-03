@@ -46,19 +46,22 @@ internal sealed class StatisticsCultivateItem
     /// <summary>已合并但合成前后有效持有量与背包数一致，不显示括号，仅「合并后 / 需求」加空格。</summary>
     public bool ShowMergeSpacedWithoutParen { get => MergeAdjustedCurrent.HasValue && DisplayCurrent == Current; }
 
-    /// <summary>合并后有效持有与背包原数不同，显示「(背包原数)」并着色。</summary>
+    /// <summary>合并后有效持有与背包原数不同，显示「合并后 (背包原数)」。</summary>
     public bool ShowMergeInventoryParen { get => MergeAdjustedCurrent.HasValue && DisplayCurrent != Current; }
 
-    /// <summary>合并后 &gt; 背包原数：括号用强调色（蓝系）。</summary>
-    public bool MergeInventoryParenUseBlue { get => MergeAdjustedCurrent.HasValue && DisplayCurrent > Current; }
+    /// <summary>首位合并显示量 &gt; 背包原数时着红色（相对原库存变多）。</summary>
+    public bool MergeDisplayLeadUseRed { get => MergeAdjustedCurrent.HasValue && DisplayCurrent > Current; }
 
-    /// <summary>合并后 &lt; 背包原数：括号用警告色（红系，低级被向上消耗）。</summary>
-    public bool MergeInventoryParenUseRed { get => MergeAdjustedCurrent.HasValue && DisplayCurrent < Current; }
+    /// <summary>首位合并显示量 &lt; 背包原数时着绿色（相对原库存变少，如低档被向上消耗）。</summary>
+    public bool MergeDisplayLeadUseGreen { get => MergeAdjustedCurrent.HasValue && DisplayCurrent < Current; }
 
-    /// <summary>背包同步原数，带前导空格与括号。</summary>
-    public string RawInventoryParenthetical { get => $" ({Current})"; }
+    /// <summary>背包原数，紧接在合并后数字后，如 <c>(44)</c>。</summary>
+    public string RawInventoryParenthetical { get => $"({Current})"; }
 
-    /// <summary>「 / 需求数」段，含前导空格。</summary>
+    /// <summary>有括号行：「/需求」紧接括号，如 <c>/55</c>。</summary>
+    public string SlashCountSuffixForParen { get => $"/{Count}"; }
+
+    /// <summary>无括号行：「 / 需求」含空格。</summary>
     public string SlashCountSuffix { get => $" / {Count}"; }
 
     public bool IsToday { get => Inner.IsItemOfToday(offset, true); }

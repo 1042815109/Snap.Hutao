@@ -276,18 +276,18 @@
                                     Orientation="Horizontal"
                                     Spacing="0"
                                     Visibility="{Binding ShowMergeInventoryParen, Converter={StaticResource BoolToVisibilityConverter}}">
-                                    <TextBlock VerticalAlignment="Center" Text="{Binding DisplayCurrent, Mode=OneWay}"/>
-                                    <TextBlock
-                                        VerticalAlignment="Center"
-                                        Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}"
-                                        Text="{Binding RawInventoryParenthetical, Mode=OneWay}"
-                                        Visibility="{Binding MergeInventoryParenUseBlue, Converter={StaticResource BoolToVisibilityConverter}}"/>
                                     <TextBlock
                                         VerticalAlignment="Center"
                                         Foreground="{ThemeResource SystemFillColorCriticalBrush}"
-                                        Text="{Binding RawInventoryParenthetical, Mode=OneWay}"
-                                        Visibility="{Binding MergeInventoryParenUseRed, Converter={StaticResource BoolToVisibilityConverter}}"/>
-                                    <TextBlock VerticalAlignment="Center" Text="{Binding SlashCountSuffix, Mode=OneWay}"/>
+                                        Text="{Binding DisplayCurrent, Mode=OneWay}"
+                                        Visibility="{Binding MergeDisplayLeadUseRed, Converter={StaticResource BoolToVisibilityConverter}}"/>
+                                    <TextBlock
+                                        VerticalAlignment="Center"
+                                        Foreground="{ThemeResource SystemFillColorSuccessBrush}"
+                                        Text="{Binding DisplayCurrent, Mode=OneWay}"
+                                        Visibility="{Binding MergeDisplayLeadUseGreen, Converter={StaticResource BoolToVisibilityConverter}}"/>
+                                    <TextBlock VerticalAlignment="Center" Text="{Binding RawInventoryParenthetical, Mode=OneWay}"/>
+                                    <TextBlock VerticalAlignment="Center" Text="{Binding SlashCountSuffixForParen, Mode=OneWay}"/>
                                 </StackPanel>
                             </StackPanel>
                         </Grid>
