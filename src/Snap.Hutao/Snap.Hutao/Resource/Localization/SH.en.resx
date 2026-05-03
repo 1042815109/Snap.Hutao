@@ -2420,6 +2420,12 @@ Space Available: {2}</value>
   <data name="ViewPageCultivationMaterialListIncompleteFirstLabel" xml:space="preserve">
     <value>Uncollected First</value>
   </data>
+  <data name="ViewPageCultivationMergeUpgradeMaterialsLabel" xml:space="preserve">
+    <value>Merge upgrade materials</value>
+  </data>
+  <data name="ViewPageCultivationTalentSynthCritTenPercentLabel" xml:space="preserve">
+    <value>Character talent (10%)</value>
+  </data>
   <data name="ViewPageCultivationMaterialListResinStatisticsLabel" xml:space="preserve">
     <value>Resin Estimation</value>
   </data>

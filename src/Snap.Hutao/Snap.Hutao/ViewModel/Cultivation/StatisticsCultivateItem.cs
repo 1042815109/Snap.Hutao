@@ -29,9 +29,16 @@ internal sealed class StatisticsCultivateItem
 
     public uint Current { get; set; }
 
-    public bool IsFinished { get => Current >= Count; }
+    /// <summary>
+    /// 升级材料合并后的展示用持有量；未启用合并时为 <see langword="null"/>。
+    /// </summary>
+    public uint? MergeAdjustedCurrent { get; set; }
 
-    public string FormattedCount { get => $"{Current}/{Count}"; }
+    public uint DisplayCurrent { get => MergeAdjustedCurrent ?? Current; }
+
+    public bool IsFinished { get => DisplayCurrent >= Count; }
+
+    public string FormattedCount { get => $"{DisplayCurrent}/{Count}"; }
 
     public bool IsToday { get => Inner.IsItemOfToday(offset, true); }
 

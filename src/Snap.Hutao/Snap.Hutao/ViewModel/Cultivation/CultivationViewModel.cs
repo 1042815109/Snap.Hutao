@@ -7,6 +7,7 @@ using Snap.Hutao.Core;
 using Snap.Hutao.Core.Database;
 using Snap.Hutao.Core.ExceptionService;
 using Snap.Hutao.Core.Logging;
+using Snap.Hutao.Core.Setting;
 using Snap.Hutao.Factory.ContentDialog;
 using Snap.Hutao.Model.Entity;
 using Snap.Hutao.Service.Cultivation;
@@ -69,6 +70,12 @@ internal sealed partial class CultivationViewModel : Abstraction.ViewModel
 
     [ObservableProperty]
     public partial bool IncompleteFirst { get; set; }
+
+    [ObservableProperty]
+    public partial bool MergeUpgradeMaterials { get; set; } = LocalSetting.Get(SettingKeys.CultivationStatisticsMergeUpgradeMaterials, false);
+
+    [ObservableProperty]
+    public partial bool TalentSynthCritTenPercent { get; set; } = LocalSetting.Get(SettingKeys.CultivationStatisticsTalentSynthCritTenPercent, false);
 
     [ObservableProperty]
     public partial ObservableCollection<StatisticsCultivateItem>? StatisticsItems { get; set; }
@@ -356,12 +363,19 @@ internal sealed partial class CultivationViewModel : Abstraction.ViewModel
 
         await taskContext.SwitchToBackgroundAsync();
 
+        bool merge = MergeUpgradeMaterials;
+        bool talentCrit = merge && TalentSynthCritTenPercent;
+        LocalSetting.Set(SettingKeys.CultivationStatisticsMergeUpgradeMaterials, merge);
+        LocalSetting.Set(SettingKeys.CultivationStatisticsTalentSynthCritTenPercent, talentCrit);
+
         CancellationToken token = exclusiveTokenProvider.GetNewToken();
         StatisticsCultivateItemCollection statistics;
         ResinStatistics resinStatistics;
         try
         {
-            statistics = await cultivationService.GetStatisticsCultivateItemCollectionAsync(Projects.CurrentItem, metadataContext, token).ConfigureAwait(false);
+            statistics = await cultivationService
+                .GetStatisticsCultivateItemCollectionAsync(Projects.CurrentItem, metadataContext, new CultivationStatisticsMergeOptions(merge, talentCrit), token)
+                .ConfigureAwait(false);
             resinStatistics = await cultivationService.GetResinStatisticsAsync(statistics, token).ConfigureAwait(false);
         }
         catch (OperationCanceledException)

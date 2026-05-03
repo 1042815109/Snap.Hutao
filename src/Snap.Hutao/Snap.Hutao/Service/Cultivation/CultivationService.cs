@@ -92,12 +92,12 @@ internal sealed partial class CultivationService : ICultivationService
         }
     }
 
-    public async ValueTask<StatisticsCultivateItemCollection> GetStatisticsCultivateItemCollectionAsync(CultivateProject cultivateProject, ICultivationMetadataContext context, CancellationToken token)
+    public async ValueTask<StatisticsCultivateItemCollection> GetStatisticsCultivateItemCollectionAsync(CultivateProject cultivateProject, ICultivationMetadataContext context, CultivationStatisticsMergeOptions mergeOptions, CancellationToken token)
     {
         await taskContext.SwitchToBackgroundAsync();
-        return SynchronizedGetStatisticsCultivateItemCollection(cultivateProject, context);
+        return SynchronizedGetStatisticsCultivateItemCollection(cultivateProject, context, mergeOptions);
 
-        StatisticsCultivateItemCollection SynchronizedGetStatisticsCultivateItemCollection(CultivateProject cultivateProject, ICultivationMetadataContext context)
+        StatisticsCultivateItemCollection SynchronizedGetStatisticsCultivateItemCollection(CultivateProject cultivateProject, ICultivationMetadataContext context, CultivationStatisticsMergeOptions mergeOptions)
         {
             Dictionary</* ItemId */ uint, StatisticsCultivateItem> resultItems = [];
             Guid projectId = cultivateProject.InnerId;
@@ -128,6 +128,8 @@ internal sealed partial class CultivationService : ICultivationService
                     existedItem.Current = inventoryItem.Count;
                 }
             }
+
+            CultivationStatisticsSurplusMerge.Apply(resultItems, context, mergeOptions);
 
             return new(resultItems);
         }
