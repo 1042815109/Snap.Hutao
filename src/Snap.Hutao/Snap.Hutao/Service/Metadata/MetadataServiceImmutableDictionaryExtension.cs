@@ -216,12 +216,17 @@ internal static class MetadataServiceImmutableDictionaryExtension
                 token);
         }
 
-        public ValueTask<ImmutableDictionary<MaterialId, Combine>> GetResultMaterialIdToCombineMapAsync(CancellationToken token = default)
+        public async ValueTask<ImmutableDictionary<MaterialId, Combine>> GetResultMaterialIdToCombineMapAsync(CancellationToken token = default)
         {
-            return metadataService.FromCacheAsDictionaryAsync<MaterialId, Combine>(
-                MetadataFileStrategies.Combine,
-                c => c.Result.Id,
-                token);
+            string cacheKey = $"{nameof(MetadataService)}.Cache.{MetadataFileStrategies.Combine.Name}.Map.{nameof(MaterialId)}.{nameof(Combine)}.PreferThreeToOne";
+            ImmutableDictionary<MaterialId, Combine>? result = await metadataService.MemoryCache.GetOrCreateAsync(cacheKey, async entry =>
+            {
+                ImmutableArray<Combine> array = await metadataService.FromCacheOrFileAsync<Combine>(MetadataFileStrategies.Combine, token).ConfigureAwait(false);
+                return CombineResultMaterialIdMapFactory.ToImmutableDictionary(array);
+            }).ConfigureAwait(false);
+
+            ArgumentNullException.ThrowIfNull(result);
+            return result;
         }
 
         private ValueTask<ImmutableDictionary<TKey, TValue>> FromCacheAsDictionaryAsync<TKey, TValue>(MetadataFileStrategy strategy, CancellationToken token)
