@@ -2475,7 +2475,7 @@
     <value>升级材料合并</value>
   </data>
   <data name="ViewPageCultivationTalentSynthCritTenPercentLabel" xml:space="preserve">
-    <value>人物天赋（10%）</value>
+    <value>角色天赋（10%）</value>
   </data>
   <data name="ViewPageCultivationMaterialListResinStatisticsLabel" xml:space="preserve">
     <value>树脂预估</value>

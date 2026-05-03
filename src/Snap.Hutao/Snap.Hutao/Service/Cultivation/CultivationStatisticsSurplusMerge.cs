@@ -10,7 +10,13 @@ namespace Snap.Hutao.Service.Cultivation;
 
 internal static class CultivationStatisticsSurplusMerge
 {
-    private const uint TalentCombineType = 3U;
+    /// <summary>
+    /// 元数据 <c>Combine.Type</c>：1 角色与武器培养素材（野怪等）、2 武器突破、3 角色天赋；与此三类对应的合成均支持 10% 暴击期望。
+    /// </summary>
+    private static bool CombineTypeSupportsSynthCritTenPercent(uint combineType)
+    {
+        return combineType is 1U or 2U or 3U;
+    }
 
     public static void Apply(Dictionary<uint, StatisticsCultivateItem> items, ICultivationMetadataContext context, CultivationStatisticsMergeOptions options)
     {
@@ -76,7 +82,7 @@ internal static class CultivationStatisticsSurplusMerge
                     continue;
                 }
 
-                double multiplier = talentCrit && upward.Type == TalentCombineType ? 1.1D : 1D;
+                double multiplier = talentCrit && CombineTypeSupportsSynthCritTenPercent(upward.Type) ? 1.1D : 1D;
                 double produced = crafts * multiplier;
                 uint resultId = upward.Result.Id;
 
