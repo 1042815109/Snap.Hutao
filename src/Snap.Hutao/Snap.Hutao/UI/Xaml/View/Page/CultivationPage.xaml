@@ -198,6 +198,11 @@
                                     Opacity="0.7"
                                     Style="{StaticResource CaptionTextBlockStyle}"
                                     Text="{Binding Description}"/>
+                                <TextBlock
+                                    Opacity="0.7"
+                                    Style="{StaticResource CaptionTextBlockStyle}"
+                                    Text="{Binding RelatedAvatarLine}"
+                                    Visibility="{Binding RelatedAvatarLine, Converter={StaticResource EmptyObjectToVisibilityConverter}}"/>
                             </StackPanel>
 
                             <StackPanel Grid.Column="2" Orientation="Horizontal">

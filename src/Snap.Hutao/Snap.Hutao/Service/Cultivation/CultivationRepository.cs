@@ -6,6 +6,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Snap.Hutao.Core.Database;
 using Snap.Hutao.Model.Entity;
 using Snap.Hutao.Model.Entity.Database;
+using Snap.Hutao.Model.Entity.Primitive;
 using Snap.Hutao.Service.Abstraction;
 using System.Collections.Immutable;
 using System.Collections.ObjectModel;
@@ -49,6 +50,26 @@ internal sealed partial class CultivationRepository : ICultivationRepository
     public ImmutableArray<CultivateEntry> GetCultivateEntryImmutableArrayByProjectIdAndItemId(Guid projectId, uint itemId)
     {
         return this.ImmutableArray<CultivateEntry>(e => e.ProjectId == projectId && e.Id == itemId);
+    }
+
+    public Guid? TryGetAvatarCultivateEntryInnerId(Guid projectId, uint avatarId)
+    {
+        ImmutableArray<CultivateEntry> entries = GetCultivateEntryImmutableArrayByProjectIdAndItemId(projectId, avatarId);
+        Guid? last = null;
+        foreach (ref readonly CultivateEntry entry in entries.AsSpan())
+        {
+            if (entry.Type != CultivateType.AvatarAndSkill)
+            {
+                continue;
+            }
+
+            if (last is null || entry.InnerId.CompareTo(last.Value) > 0)
+            {
+                last = entry.InnerId;
+            }
+        }
+
+        return last;
     }
 
     public void AddCultivateEntry(CultivateEntry entry)

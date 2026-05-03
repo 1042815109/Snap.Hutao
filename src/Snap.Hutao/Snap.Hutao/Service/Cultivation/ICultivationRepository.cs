@@ -43,6 +43,12 @@ internal interface ICultivationRepository : IRepository<CultivateEntryLevelInfor
 
     ImmutableArray<CultivateEntry> GetCultivateEntryImmutableArrayByProjectIdAndItemId(Guid projectId, uint itemId);
 
+    /// <summary>
+    /// 解析当前计划中指定角色的养成条目（类型为 CultivateType.AvatarAndSkill）。
+    /// 若存在多条历史记录，取条目主键 InnerId（Guid）较大的一条。
+    /// </summary>
+    Guid? TryGetAvatarCultivateEntryInnerId(Guid projectId, uint avatarId);
+
     Guid GetCultivateProjectIdByEntryId(Guid entryId);
 
     /// <summary>

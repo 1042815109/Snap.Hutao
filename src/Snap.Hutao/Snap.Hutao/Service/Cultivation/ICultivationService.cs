@@ -25,7 +25,9 @@ internal interface ICultivationService
 
     ValueTask RemoveProjectAsync(CultivateProject project);
 
-    ValueTask<ConsumptionSaveResultKind> SaveConsumptionAsync(InputConsumption inputConsumption);
+    ValueTask<ConsumptionSaveResult> SaveConsumptionAsync(InputConsumption inputConsumption);
+
+    ValueTask<Guid?> TryGetAvatarCultivateEntryInnerIdAsync(uint avatarId);
 
     void SaveCultivateItem(CultivateItemView item);
 

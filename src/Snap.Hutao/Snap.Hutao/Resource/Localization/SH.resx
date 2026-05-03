@@ -1931,6 +1931,9 @@
   <data name="ViewModelCultivationEntryViewPromoteOnlyHint" xml:space="preserve">
     <value>仅突破</value>
   </data>
+  <data name="ViewModelCultivationEntryRelatedAvatar" xml:space="preserve">
+    <value>关联角色：{0}</value>
+  </data>
   <data name="ViewModelCultivationProjectAdded" xml:space="preserve">
     <value>添加成功</value>
   </data>

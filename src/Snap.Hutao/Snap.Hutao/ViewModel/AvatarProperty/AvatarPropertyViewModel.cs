@@ -335,9 +335,9 @@ internal sealed partial class AvatarPropertyViewModel : Abstraction.ViewModel, I
             Strategy = options.Strategy,
         };
 
-        ConsumptionSaveResultKind avatarSaveKind = await scopeContext.CultivationService.SaveConsumptionAsync(avatarInput).ConfigureAwait(false);
+        ConsumptionSaveResult avatarSave = await scopeContext.CultivationService.SaveConsumptionAsync(avatarInput).ConfigureAwait(false);
 
-        InfoBarMessage? avatarMessage = avatarSaveKind switch
+        InfoBarMessage? avatarMessage = avatarSave.Kind switch
         {
             ConsumptionSaveResultKind.NoProject => InfoBarMessage.Warning(SH.ViewModelCultivationEntryAddWarning),
             ConsumptionSaveResultKind.Skipped => isBatch ? default : InfoBarMessage.Information(SH.ViewModelCultivationConsumptionSaveSkippedHint),
@@ -351,12 +351,18 @@ internal sealed partial class AvatarPropertyViewModel : Abstraction.ViewModel, I
             scopeContext.Messenger.Send(avatarMessage);
         }
 
-        if (avatarSaveKind is ConsumptionSaveResultKind.NoProject)
+        if (avatarSave.Kind is ConsumptionSaveResultKind.NoProject)
         {
             return false;
         }
 
         ArgumentNullException.ThrowIfNull(options.Delta.Weapon);
+
+        Guid? relatedAvatarEntryId = avatarSave.CreatedEntryInnerId;
+        if (relatedAvatarEntryId is null && avatarSave.Kind is ConsumptionSaveResultKind.Skipped)
+        {
+            relatedAvatarEntryId = await scopeContext.CultivationService.TryGetAvatarCultivateEntryInnerIdAsync(options.Delta.AvatarId).ConfigureAwait(false);
+        }
 
         InputConsumption weaponInput = new()
         {
@@ -365,10 +371,11 @@ internal sealed partial class AvatarPropertyViewModel : Abstraction.ViewModel, I
             Items = consumption.WeaponConsume,
             LevelInformation = levelInformation,
             Strategy = options.Strategy,
+            RelatedEntryId = relatedAvatarEntryId,
         };
 
-        ConsumptionSaveResultKind weaponSaveKind = await scopeContext.CultivationService.SaveConsumptionAsync(weaponInput).ConfigureAwait(false);
-        InfoBarMessage? weaponMessage = weaponSaveKind switch
+        ConsumptionSaveResult weaponSave = await scopeContext.CultivationService.SaveConsumptionAsync(weaponInput).ConfigureAwait(false);
+        InfoBarMessage? weaponMessage = weaponSave.Kind switch
         {
             ConsumptionSaveResultKind.NoProject => InfoBarMessage.Warning(SH.ViewModelCultivationEntryAddWarning),
             ConsumptionSaveResultKind.Skipped => isBatch ? default : InfoBarMessage.Information(SH.ViewModelCultivationConsumptionSaveSkippedHint),
@@ -382,7 +389,7 @@ internal sealed partial class AvatarPropertyViewModel : Abstraction.ViewModel, I
             scopeContext.Messenger.Send(weaponMessage);
         }
 
-        return weaponSaveKind is not ConsumptionSaveResultKind.NoProject;
+        return weaponSave.Kind is not ConsumptionSaveResultKind.NoProject;
     }
 
     [Command("ExportToTextCommand")]

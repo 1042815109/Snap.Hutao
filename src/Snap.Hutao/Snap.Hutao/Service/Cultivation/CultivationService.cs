@@ -67,6 +67,12 @@ internal sealed partial class CultivationService : ICultivationService
         {
             ImmutableArray<CultivateEntry> entries = cultivationRepository.GetCultivateEntryImmutableArrayIncludingLevelInformationByProjectId(cultivateProject.InnerId);
 
+            Dictionary<Guid, CultivateEntry> entryByInnerId = new(entries.Length);
+            foreach (ref readonly CultivateEntry entry in entries.AsSpan())
+            {
+                entryByInnerId[entry.InnerId] = entry;
+            }
+
             List<CultivateEntryView> resultEntries = new(entries.Length);
             foreach (ref readonly CultivateEntry entry in entries.AsSpan())
             {
@@ -87,7 +93,13 @@ internal sealed partial class CultivationService : ICultivationService
                     _ => default!,
                 };
 
-                resultEntries.Add(CultivateEntryView.Create(entry, item, entryItems.ToImmutable()));
+                string? relatedAvatarName = null;
+                if (entry.Type is CultivateType.Weapon && entry.RelatedEntryId is Guid relatedId && entryByInnerId.TryGetValue(relatedId, out CultivateEntry? relatedEntry) && relatedEntry.Type is CultivateType.AvatarAndSkill)
+                {
+                    relatedAvatarName = context.GetAvatarItem(relatedEntry.Id).Name;
+                }
+
+                resultEntries.Add(CultivateEntryView.Create(entry, item, entryItems.ToImmutable(), relatedAvatarName));
             }
 
             ObservableCollection<CultivateEntryView> result = resultEntries.SortByDescending(e => e.IsToday).ToObservableCollection();
@@ -156,13 +168,13 @@ internal sealed partial class CultivationService : ICultivationService
         cultivationRepository.UpdateCultivateItem(item.Entity);
     }
 
-    public async ValueTask<ConsumptionSaveResultKind> SaveConsumptionAsync(InputConsumption inputConsumption)
+    public async ValueTask<ConsumptionSaveResult> SaveConsumptionAsync(InputConsumption inputConsumption)
     {
         // No selected project
         IAdvancedDbCollectionView<CultivateProject> projects = await GetProjectCollectionAsync().ConfigureAwait(false);
         if (!await EnsureCurrentProjectAsync(projects).ConfigureAwait(false))
         {
-            return ConsumptionSaveResultKind.NoProject;
+            return new(ConsumptionSaveResultKind.NoProject);
         }
 
         ArgumentNullException.ThrowIfNull(projects.CurrentItem);
@@ -172,7 +184,7 @@ internal sealed partial class CultivationService : ICultivationService
         // PreserveExisting or CreateNewEntry, but no item
         if (inputConsumption is { Strategy: not ConsumptionSaveStrategyKind.OverwriteExisting, Items: [] })
         {
-            return ConsumptionSaveResultKind.NoItem;
+            return new(ConsumptionSaveResultKind.NoItem);
         }
 
         // PreserveExisting or OverwriteExisting
@@ -185,7 +197,7 @@ internal sealed partial class CultivationService : ICultivationService
             {
                 if (inputConsumption.Strategy is ConsumptionSaveStrategyKind.PreserveExisting)
                 {
-                    return ConsumptionSaveResultKind.Skipped;
+                    return new(ConsumptionSaveResultKind.Skipped);
                 }
 
                 if (inputConsumption.Strategy is ConsumptionSaveStrategyKind.OverwriteExisting)
@@ -199,7 +211,7 @@ internal sealed partial class CultivationService : ICultivationService
 
                     if (inputConsumption.Items is [])
                     {
-                        return ConsumptionSaveResultKind.Removed;
+                        return new(ConsumptionSaveResultKind.Removed);
                     }
                 }
             }
@@ -207,13 +219,14 @@ internal sealed partial class CultivationService : ICultivationService
             {
                 if (inputConsumption.Items is [])
                 {
-                    return ConsumptionSaveResultKind.NoItem;
+                    return new(ConsumptionSaveResultKind.NoItem);
                 }
             }
         }
 
         {
             CultivateEntry entry = CultivateEntry.From(projects.CurrentItem.InnerId, inputConsumption.Type, inputConsumption.ItemId);
+            entry.RelatedEntryId = inputConsumption.RelatedEntryId;
             cultivationRepository.AddCultivateEntry(entry);
 
             CultivateEntryLevelInformation entryLevelInformation = CultivateEntryLevelInformation.From(entry.InnerId, inputConsumption.Type, inputConsumption.LevelInformation);
@@ -225,9 +238,23 @@ internal sealed partial class CultivationService : ICultivationService
             // The consumption save operation is always performed outside cultivation page
             // and without touching the cache. So we have to invalidate the cache manually.
             entryCollectionCache.TryRemove(projects.CurrentItem.InnerId, out _);
+
+            return new(ConsumptionSaveResultKind.Added, entry.InnerId);
+        }
+    }
+
+    public async ValueTask<Guid?> TryGetAvatarCultivateEntryInnerIdAsync(uint avatarId)
+    {
+        IAdvancedDbCollectionView<CultivateProject> projects = await GetProjectCollectionAsync().ConfigureAwait(false);
+        if (!await EnsureCurrentProjectAsync(projects).ConfigureAwait(false))
+        {
+            return null;
         }
 
-        return ConsumptionSaveResultKind.Added;
+        ArgumentNullException.ThrowIfNull(projects.CurrentItem);
+
+        await taskContext.SwitchToBackgroundAsync();
+        return cultivationRepository.TryGetAvatarCultivateEntryInnerId(projects.CurrentItem.InnerId, avatarId);
     }
 
     public async ValueTask<ProjectAddResultKind> TryAddProjectAsync(CultivateProject project)
