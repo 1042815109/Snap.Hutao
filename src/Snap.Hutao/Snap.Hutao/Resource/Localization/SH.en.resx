@@ -2435,6 +2435,15 @@ Space Available: {2}</value>
   <data name="ViewPageCultivationMaterialStatistics" xml:space="preserve">
     <value>Material Statistics</value>
   </data>
+  <data name="ViewPageCultivationStatisticsUnfinishedConsumers" xml:space="preserve">
+    <value>Unfinished: {0}</value>
+  </data>
+  <data name="ViewPageCultivationStatisticsUnfinishedConsumersEmptyList" xml:space="preserve">
+    <value>No unchecked entries</value>
+  </data>
+  <data name="ViewPageCultivationStatisticsConsumerMenuExcluded" xml:space="preserve">
+    <value>Mora, EXP books, and Mystic Enhancement Ore have no per-entry breakdown.</value>
+  </data>
   <data name="ViewPageCultivationNavigateAction" xml:space="preserve">
     <value>Go</value>
   </data>

@@ -66,6 +66,11 @@ internal sealed class StatisticsCultivateItem
 
     public bool IsToday { get => Inner.IsItemOfToday(offset, true); }
 
+    /// <summary>
+    /// 材料统计右键菜单中展示的「未完成」养成条目说明（含需求量）。
+    /// </summary>
+    public string StatisticsConsumerMenuText { get; set; } = string.Empty;
+
     internal bool ExcludedFromPresentation { get; set; }
 
     public static StatisticsCultivateItem Create(Material inner, TimeSpan offset)

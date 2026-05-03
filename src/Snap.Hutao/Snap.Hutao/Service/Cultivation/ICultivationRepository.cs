@@ -44,4 +44,9 @@ internal interface ICultivationRepository : IRepository<CultivateEntryLevelInfor
     ImmutableArray<CultivateEntry> GetCultivateEntryImmutableArrayByProjectIdAndItemId(Guid projectId, uint itemId);
 
     Guid GetCultivateProjectIdByEntryId(Guid entryId);
+
+    /// <summary>
+    /// 联表查询某计划下所有养成物品及其所属条目（用于材料统计未勾选条目等）。
+    /// </summary>
+    ImmutableArray<(CultivateEntry Entry, CultivateItem Item)> GetCultivateEntryItemPairsByProjectId(Guid projectId);
 }

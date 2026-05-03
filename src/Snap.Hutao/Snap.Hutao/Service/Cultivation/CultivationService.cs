@@ -2,18 +2,23 @@
 // Licensed under the MIT license.
 
 using Snap.Hutao.Core.Database;
+using Snap.Hutao.Model;
 using Snap.Hutao.Model.Entity;
 using Snap.Hutao.Model.Entity.Primitive;
 using Snap.Hutao.Model.Intrinsic;
 using Snap.Hutao.Model.Metadata;
+using Snap.Hutao.Model.Metadata.Item;
 using Snap.Hutao.Model.Primitive;
 using Snap.Hutao.Service.Cultivation.Consumption;
 using Snap.Hutao.Service.Inventory;
 using Snap.Hutao.Service.Metadata.ContextAbstraction;
 using Snap.Hutao.ViewModel.Cultivation;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
+using System.Globalization;
 using System.Collections.Immutable;
 using System.Collections.ObjectModel;
+using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using ModelItem = Snap.Hutao.Model.Item;
@@ -130,6 +135,7 @@ internal sealed partial class CultivationService : ICultivationService
             }
 
             CultivationStatisticsSurplusMerge.Apply(resultItems, context, mergeOptions);
+            ApplyStatisticsConsumerMenuText(resultItems, projectId, context, cultivationRepository);
 
             return new(resultItems);
         }
@@ -304,5 +310,64 @@ internal sealed partial class CultivationService : ICultivationService
                 RecursiveAddMaterialIngredientsByMaterialId(cultivateProject, context, resultItems, ingredient.Id);
             }
         }
+    }
+
+    private static void ApplyStatisticsConsumerMenuText(
+        Dictionary<uint, StatisticsCultivateItem> resultItems,
+        Guid projectId,
+        ICultivationMetadataContext context,
+        ICultivationRepository cultivationRepository)
+    {
+        ImmutableArray<(CultivateEntry Entry, CultivateItem Item)> pairs = cultivationRepository.GetCultivateEntryItemPairsByProjectId(projectId);
+        Dictionary<uint, List<string>> unfinishedSegmentsByMaterial = [];
+
+        foreach ((CultivateEntry entry, CultivateItem item) in pairs.AsSpan())
+        {
+            if (item.IsFinished)
+            {
+                continue;
+            }
+
+            string name = FormatStatisticsConsumerEntryName(entry, context);
+            string segment = $"{name}×{item.Count}";
+            ref List<string>? list = ref CollectionsMarshal.GetValueRefOrAddDefault(unfinishedSegmentsByMaterial, item.ItemId, out _);
+            list ??= [];
+            list.Add(segment);
+        }
+
+        foreach ((uint materialId, StatisticsCultivateItem stat) in resultItems)
+        {
+            if (MaterialIds.IsExcludedFromStatisticsConsumerMenu(materialId))
+            {
+                stat.StatisticsConsumerMenuText = SH.ViewPageCultivationStatisticsConsumerMenuExcluded;
+                continue;
+            }
+
+            if (unfinishedSegmentsByMaterial.TryGetValue(materialId, out List<string>? segments))
+            {
+                segments.Sort(StringComparer.Ordinal);
+                stat.StatisticsConsumerMenuText = string.Format(
+                    CultureInfo.CurrentCulture,
+                    SH.ViewPageCultivationStatisticsUnfinishedConsumers,
+                    string.Join('，', segments));
+            }
+            else
+            {
+                stat.StatisticsConsumerMenuText = string.Format(
+                    CultureInfo.CurrentCulture,
+                    SH.ViewPageCultivationStatisticsUnfinishedConsumers,
+                    SH.ViewPageCultivationStatisticsUnfinishedConsumersEmptyList);
+            }
+        }
+    }
+
+    private static string FormatStatisticsConsumerEntryName(CultivateEntry entry, ICultivationMetadataContext context)
+    {
+        return entry.Type switch
+        {
+            CultivateType.AvatarAndSkill => context.GetAvatarItem(entry.Id).Name,
+            CultivateType.Weapon => context.GetWeaponItem(entry.Id).Name,
+            _ => Material.Default.Name,
+        };
     }
 }

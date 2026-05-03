@@ -227,7 +227,13 @@
             </DataTemplate>
 
             <DataTemplate x:Key="StatisticsItemTemplate" x:DataType="shvcu:StatisticsCultivateItem">
-                <shuxcc:HorizontalCard Background="{Binding IsToday, Converter={ThemeResource BoolToStatisticsBrushSelector}}">
+                <Border Background="Transparent" IsRightTapEnabled="True">
+                    <Border.ContextFlyout>
+                        <MenuFlyout>
+                            <MenuFlyoutItem IsEnabled="False" MaxWidth="360" Text="{Binding StatisticsConsumerMenuText, Mode=OneWay}"/>
+                        </MenuFlyout>
+                    </Border.ContextFlyout>
+                    <shuxcc:HorizontalCard Background="{Binding IsToday, Converter={ThemeResource BoolToStatisticsBrushSelector}}">
                     <shuxcc:HorizontalCard.Left>
                         <Grid Grid.Column="0">
                             <shuxc:ItemIcon
@@ -293,6 +299,7 @@
                         </Grid>
                     </shuxcc:HorizontalCard.Right>
                 </shuxcc:HorizontalCard>
+                </Border>
             </DataTemplate>
 
             <DataTemplate x:Key="InventoryItemTemplate" x:DataType="shvcu:InventoryItemView">

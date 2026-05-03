@@ -2486,6 +2486,15 @@
   <data name="ViewPageCultivationMaterialStatistics" xml:space="preserve">
     <value>材料统计</value>
   </data>
+  <data name="ViewPageCultivationStatisticsUnfinishedConsumers" xml:space="preserve">
+    <value>未完成：{0}</value>
+  </data>
+  <data name="ViewPageCultivationStatisticsUnfinishedConsumersEmptyList" xml:space="preserve">
+    <value>无未勾选条目</value>
+  </data>
+  <data name="ViewPageCultivationStatisticsConsumerMenuExcluded" xml:space="preserve">
+    <value>摩拉、经验书与魔矿不显示未完成条目。</value>
+  </data>
   <data name="ViewPageCultivationNavigateAction" xml:space="preserve">
     <value>前往</value>
   </data>

@@ -2,10 +2,14 @@
 // Licensed under the MIT license.
 
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
+using Snap.Hutao.Core.Database;
 using Snap.Hutao.Model.Entity;
+using Snap.Hutao.Model.Entity.Database;
 using Snap.Hutao.Service.Abstraction;
 using System.Collections.Immutable;
 using System.Collections.ObjectModel;
+using System.Linq;
 
 namespace Snap.Hutao.Service.Cultivation;
 
@@ -95,5 +99,24 @@ internal sealed partial class CultivationRepository : ICultivationRepository
     public Guid GetCultivateProjectIdByEntryId(Guid entryId)
     {
         return this.Single<CultivateEntry, Guid>(query => query.Where(entry => entry.InnerId == entryId).Select(entry => entry.InnerId));
+    }
+
+    public ImmutableArray<(CultivateEntry Entry, CultivateItem Item)> GetCultivateEntryItemPairsByProjectId(Guid projectId)
+    {
+        using (IServiceScope scope = ServiceProvider.CreateScope())
+        {
+            AppDbContext db = scope.GetAppDbContext();
+            IQueryable<CultivateEntry> entries = db.Set<CultivateEntry>().AsNoTracking().Where(e => e.ProjectId == projectId);
+            return [.. db.Set<CultivateItem>().AsNoTracking()
+                .Join(
+                    entries,
+                    item => item.EntryId,
+                    entry => entry.InnerId,
+                    (item, entry) => new { Entry = entry, Item = item })
+                .OrderBy(t => t.Entry.InnerId)
+                .ThenBy(t => t.Item.ItemId)
+                .ToList()
+                .Select(t => (t.Entry, t.Item))];
+        }
     }
 }
