@@ -352,7 +352,7 @@ internal sealed partial class CultivationService : ICultivationService
             entryByInnerId[e.InnerId] = e;
         }
 
-        Dictionary<uint, List<string>> unfinishedSegmentsByMaterial = [];
+        Dictionary<uint, List<(string SortKey, StatisticsConsumerMenuLine Line)>> unfinishedRowsByMaterial = [];
 
         foreach ((CultivateEntry entry, CultivateItem item) in pairs.AsSpan())
         {
@@ -361,30 +361,72 @@ internal sealed partial class CultivationService : ICultivationService
                 continue;
             }
 
-            string name = FormatStatisticsConsumerEntryName(entry, context, entryByInnerId);
-            string segment = $"{name}×{item.Count}";
-            ref List<string>? list = ref CollectionsMarshal.GetValueRefOrAddDefault(unfinishedSegmentsByMaterial, item.ItemId, out _);
+            string sortKey = $"{FormatStatisticsConsumerEntryName(entry, context, entryByInnerId)}×{item.Count}";
+            StatisticsConsumerMenuLine line = CreateStatisticsConsumerMenuLine(entry, item, context, entryByInnerId);
+            ref List<(string SortKey, StatisticsConsumerMenuLine Line)>? list = ref CollectionsMarshal.GetValueRefOrAddDefault(unfinishedRowsByMaterial, item.ItemId, out _);
             list ??= [];
-            list.Add(segment);
+            list.Add((sortKey, line));
         }
 
         foreach ((uint materialId, StatisticsCultivateItem stat) in resultItems)
         {
             if (MaterialIds.IsExcludedFromStatisticsConsumerMenu(materialId))
             {
-                stat.StatisticsConsumerMenuLines = ImmutableArray.Create(SH.ViewPageCultivationStatisticsConsumerMenuExcluded);
+                stat.StatisticsConsumerMenuLines = ImmutableArray.Create(StatisticsConsumerMenuLine.Plain(SH.ViewPageCultivationStatisticsConsumerMenuExcluded));
                 continue;
             }
 
-            if (unfinishedSegmentsByMaterial.TryGetValue(materialId, out List<string>? segments))
+            if (unfinishedRowsByMaterial.TryGetValue(materialId, out List<(string SortKey, StatisticsConsumerMenuLine Line)>? rows))
             {
-                segments.Sort(StringComparer.Ordinal);
-                stat.StatisticsConsumerMenuLines = ImmutableArray.CreateRange(segments);
+                rows.Sort(static (a, b) => StringComparer.Ordinal.Compare(a.SortKey, b.SortKey));
+                stat.StatisticsConsumerMenuLines = ImmutableArray.CreateRange(rows.ConvertAll(static r => r.Line));
             }
             else
             {
-                stat.StatisticsConsumerMenuLines = ImmutableArray.Create(SH.ViewPageCultivationStatisticsUnfinishedConsumersEmptyList);
+                stat.StatisticsConsumerMenuLines = ImmutableArray.Create(StatisticsConsumerMenuLine.Plain(SH.ViewPageCultivationStatisticsUnfinishedConsumersEmptyList));
             }
+        }
+    }
+
+    private static StatisticsConsumerMenuLine CreateStatisticsConsumerMenuLine(
+        CultivateEntry entry,
+        CultivateItem item,
+        ICultivationMetadataContext context,
+        Dictionary<Guid, CultivateEntry> entryByInnerId)
+    {
+        string countSuffix = $"×{item.Count}";
+
+        switch (entry.Type)
+        {
+            case CultivateType.AvatarAndSkill:
+            {
+                ModelItem avatarItem = context.GetAvatarItem(entry.Id);
+                return StatisticsConsumerMenuLine.SingleIcon(avatarItem.Icon, avatarItem.Quality, avatarItem.Name, countSuffix);
+            }
+
+            case CultivateType.Weapon:
+            {
+                ModelItem weaponItem = context.GetWeaponItem(entry.Id);
+                if (entry.RelatedEntryId is Guid relatedId
+                    && entryByInnerId.TryGetValue(relatedId, out CultivateEntry? related)
+                    && related.Type is CultivateType.AvatarAndSkill)
+                {
+                    ModelItem avatarItem = context.GetAvatarItem(related.Id);
+                    return StatisticsConsumerMenuLine.AvatarAndWeapon(
+                        avatarItem.Icon,
+                        avatarItem.Quality,
+                        avatarItem.Name,
+                        weaponItem.Icon,
+                        weaponItem.Quality,
+                        weaponItem.Name,
+                        countSuffix);
+                }
+
+                return StatisticsConsumerMenuLine.SingleIcon(weaponItem.Icon, weaponItem.Quality, weaponItem.Name, countSuffix);
+            }
+
+            default:
+                return StatisticsConsumerMenuLine.Plain($"{Material.Default.Name}{countSuffix}");
         }
     }
 

@@ -238,12 +238,52 @@
                             <ScrollViewer MaxHeight="320" MinWidth="220" Padding="12,10">
                                 <ItemsControl ItemsSource="{Binding StatisticsConsumerMenuLines, Mode=OneWay}">
                                     <ItemsControl.ItemTemplate>
-                                        <DataTemplate x:DataType="x:String">
-                                            <TextBlock
-                                                Margin="0,3"
-                                                Style="{ThemeResource BodyTextBlockStyle}"
-                                                Text="{x:Bind Mode=OneWay}"
-                                                TextWrapping="WrapWholeWords"/>
+                                        <DataTemplate x:DataType="shvcu:StatisticsConsumerMenuLine">
+                                            <Grid Margin="0,3">
+                                                <TextBlock
+                                                    Style="{ThemeResource BodyTextBlockStyle}"
+                                                    Text="{x:Bind PlainMessage, Mode=OneWay}"
+                                                    TextWrapping="WrapWholeWords"
+                                                    Visibility="{x:Bind IsPlainMessage, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}"/>
+                                                <StackPanel
+                                                    Orientation="Horizontal"
+                                                    Spacing="4"
+                                                    VerticalAlignment="Center"
+                                                    Visibility="{x:Bind ShowRichRow, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}">
+                                                    <shuxc:ItemIcon
+                                                        Width="28"
+                                                        Height="28"
+                                                        Icon="{x:Bind LeadingIcon, Mode=OneWay}"
+                                                        Quality="{x:Bind LeadingQuality, Mode=OneWay}"/>
+                                                    <TextBlock
+                                                        VerticalAlignment="Center"
+                                                        Style="{ThemeResource BodyTextBlockStyle}"
+                                                        Text="{x:Bind FirstName, Mode=OneWay}"/>
+                                                    <StackPanel
+                                                        Orientation="Horizontal"
+                                                        Spacing="4"
+                                                        VerticalAlignment="Center"
+                                                        Visibility="{x:Bind HasSecondIcon, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}">
+                                                        <TextBlock
+                                                            VerticalAlignment="Center"
+                                                            Style="{ThemeResource BodyTextBlockStyle}"
+                                                            Text="{x:Bind BetweenSeparator, Mode=OneWay}"/>
+                                                        <shuxc:ItemIcon
+                                                            Width="28"
+                                                            Height="28"
+                                                            Icon="{x:Bind SecondIcon, Mode=OneWay}"
+                                                            Quality="{x:Bind SecondQuality, Mode=OneWay}"/>
+                                                        <TextBlock
+                                                            VerticalAlignment="Center"
+                                                            Style="{ThemeResource BodyTextBlockStyle}"
+                                                            Text="{x:Bind SecondName, Mode=OneWay}"/>
+                                                    </StackPanel>
+                                                    <TextBlock
+                                                        VerticalAlignment="Center"
+                                                        Style="{ThemeResource BodyTextBlockStyle}"
+                                                        Text="{x:Bind CountSuffix, Mode=OneWay}"/>
+                                                </StackPanel>
+                                            </Grid>
                                         </DataTemplate>
                                     </ItemsControl.ItemTemplate>
                                 </ItemsControl>
