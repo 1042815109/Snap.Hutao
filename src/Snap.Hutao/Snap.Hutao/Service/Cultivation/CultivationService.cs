@@ -110,18 +110,23 @@ internal sealed partial class CultivationService : ICultivationService
 
     public async ValueTask<StatisticsCultivateItemCollection> GetStatisticsCultivateItemCollectionAsync(CultivateProject cultivateProject, ICultivationMetadataContext context, CultivationStatisticsMergeOptions mergeOptions, CancellationToken token)
     {
+        token.ThrowIfCancellationRequested();
         await taskContext.SwitchToBackgroundAsync();
-        return SynchronizedGetStatisticsCultivateItemCollection(cultivateProject, context, mergeOptions);
+        token.ThrowIfCancellationRequested();
+        return SynchronizedGetStatisticsCultivateItemCollection(cultivateProject, context, mergeOptions, token);
 
-        StatisticsCultivateItemCollection SynchronizedGetStatisticsCultivateItemCollection(CultivateProject cultivateProject, ICultivationMetadataContext context, CultivationStatisticsMergeOptions mergeOptions)
+        StatisticsCultivateItemCollection SynchronizedGetStatisticsCultivateItemCollection(CultivateProject cultivateProject, ICultivationMetadataContext context, CultivationStatisticsMergeOptions mergeOptions, CancellationToken token)
         {
+            token.ThrowIfCancellationRequested();
             Dictionary</* ItemId */ uint, StatisticsCultivateItem> resultItems = [];
             Guid projectId = cultivateProject.InnerId;
 
             foreach (ref readonly CultivateEntry entry in cultivationRepository.GetCultivateEntryImmutableArrayByProjectId(projectId).AsSpan())
             {
+                token.ThrowIfCancellationRequested();
                 foreach (ref readonly CultivateItem item in cultivationRepository.GetCultivateItemImmutableArrayByEntryId(entry.InnerId).AsSpan())
                 {
+                    token.ThrowIfCancellationRequested();
                     ref StatisticsCultivateItem? existedItem = ref CollectionsMarshal.GetValueRefOrAddDefault(resultItems, item.ItemId, out _);
                     if (existedItem is null || existedItem.ExcludedFromPresentation)
                     {
@@ -132,12 +137,13 @@ internal sealed partial class CultivationService : ICultivationService
                         existedItem.Count += item.Count;
                     }
 
-                    RecursiveAddMaterialIngredientsByMaterialId(cultivateProject, context, resultItems, item.ItemId);
+                    RecursiveAddMaterialIngredientsByMaterialId(cultivateProject, context, resultItems, item.ItemId, token);
                 }
             }
 
             foreach (ref readonly InventoryItem inventoryItem in inventoryRepository.GetInventoryItemImmutableArrayByProjectId(projectId).AsSpan())
             {
+                token.ThrowIfCancellationRequested();
                 ref StatisticsCultivateItem existedItem = ref CollectionsMarshal.GetValueRefOrNullRef(resultItems, inventoryItem.ItemId);
                 if (!Unsafe.IsNullRef(in existedItem))
                 {
@@ -146,7 +152,7 @@ internal sealed partial class CultivationService : ICultivationService
             }
 
             CultivationStatisticsSurplusMerge.Apply(resultItems, context, mergeOptions);
-            ApplyStatisticsConsumerMenuLines(resultItems, projectId, context, cultivationRepository);
+            ApplyStatisticsConsumerMenuLines(resultItems, projectId, context, cultivationRepository, token);
 
             return new(resultItems);
         }
@@ -314,8 +320,10 @@ internal sealed partial class CultivationService : ICultivationService
         return true;
     }
 
-    private static void RecursiveAddMaterialIngredientsByMaterialId(CultivateProject cultivateProject, ICultivationMetadataContext context, Dictionary<uint, StatisticsCultivateItem> resultItems, MaterialId materialId)
+    private static void RecursiveAddMaterialIngredientsByMaterialId(CultivateProject cultivateProject, ICultivationMetadataContext context, Dictionary<uint, StatisticsCultivateItem> resultItems, MaterialId materialId, CancellationToken token)
     {
+        token.ThrowIfCancellationRequested();
+
         if (materialId == 104003U)
         {
             foreach (ref readonly MaterialId xpBookId in (ReadOnlySpan<MaterialId>)[104001U, 104002U])
@@ -331,9 +339,10 @@ internal sealed partial class CultivationService : ICultivationService
         {
             foreach (ref readonly IdCount ingredient in combine.Materials.AsSpan())
             {
+                token.ThrowIfCancellationRequested();
                 ref StatisticsCultivateItem? ingredientItem = ref CollectionsMarshal.GetValueRefOrAddDefault(resultItems, ingredient.Id, out _);
                 ingredientItem ??= StatisticsCultivateItem.Create(context.GetMaterial(ingredient.Id), cultivateProject.ServerTimeZoneOffset);
-                RecursiveAddMaterialIngredientsByMaterialId(cultivateProject, context, resultItems, ingredient.Id);
+                RecursiveAddMaterialIngredientsByMaterialId(cultivateProject, context, resultItems, ingredient.Id, token);
             }
         }
     }
@@ -342,8 +351,10 @@ internal sealed partial class CultivationService : ICultivationService
         Dictionary<uint, StatisticsCultivateItem> resultItems,
         Guid projectId,
         ICultivationMetadataContext context,
-        ICultivationRepository cultivationRepository)
+        ICultivationRepository cultivationRepository,
+        CancellationToken token)
     {
+        token.ThrowIfCancellationRequested();
         ImmutableArray<(CultivateEntry Entry, CultivateItem Item)> pairs = cultivationRepository.GetCultivateEntryItemPairsByProjectId(projectId);
         ImmutableArray<CultivateEntry> projectEntries = cultivationRepository.GetCultivateEntryImmutableArrayByProjectId(projectId);
         Dictionary<Guid, CultivateEntry> entryByInnerId = new(projectEntries.Length);
@@ -356,6 +367,7 @@ internal sealed partial class CultivationService : ICultivationService
 
         foreach ((CultivateEntry entry, CultivateItem item) in pairs.AsSpan())
         {
+            token.ThrowIfCancellationRequested();
             if (item.IsFinished)
             {
                 continue;
@@ -370,6 +382,7 @@ internal sealed partial class CultivationService : ICultivationService
 
         foreach ((uint materialId, StatisticsCultivateItem stat) in resultItems)
         {
+            token.ThrowIfCancellationRequested();
             if (MaterialIds.IsExcludedFromStatisticsConsumerMenu(materialId))
             {
                 stat.StatisticsConsumerMenuLines = ImmutableArray.Create(StatisticsConsumerMenuLine.Plain(SH.ViewPageCultivationStatisticsConsumerMenuExcluded));
