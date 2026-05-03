@@ -15,7 +15,6 @@ using Snap.Hutao.Service.Metadata.ContextAbstraction;
 using Snap.Hutao.ViewModel.Cultivation;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Globalization;
 using System.Collections.Immutable;
 using System.Collections.ObjectModel;
 using System.Linq;
@@ -135,7 +134,7 @@ internal sealed partial class CultivationService : ICultivationService
             }
 
             CultivationStatisticsSurplusMerge.Apply(resultItems, context, mergeOptions);
-            ApplyStatisticsConsumerMenuText(resultItems, projectId, context, cultivationRepository);
+            ApplyStatisticsConsumerMenuLines(resultItems, projectId, context, cultivationRepository);
 
             return new(resultItems);
         }
@@ -312,7 +311,7 @@ internal sealed partial class CultivationService : ICultivationService
         }
     }
 
-    private static void ApplyStatisticsConsumerMenuText(
+    private static void ApplyStatisticsConsumerMenuLines(
         Dictionary<uint, StatisticsCultivateItem> resultItems,
         Guid projectId,
         ICultivationMetadataContext context,
@@ -339,24 +338,18 @@ internal sealed partial class CultivationService : ICultivationService
         {
             if (MaterialIds.IsExcludedFromStatisticsConsumerMenu(materialId))
             {
-                stat.StatisticsConsumerMenuText = SH.ViewPageCultivationStatisticsConsumerMenuExcluded;
+                stat.StatisticsConsumerMenuLines = ImmutableArray.Create(SH.ViewPageCultivationStatisticsConsumerMenuExcluded);
                 continue;
             }
 
             if (unfinishedSegmentsByMaterial.TryGetValue(materialId, out List<string>? segments))
             {
                 segments.Sort(StringComparer.Ordinal);
-                stat.StatisticsConsumerMenuText = string.Format(
-                    CultureInfo.CurrentCulture,
-                    SH.ViewPageCultivationStatisticsUnfinishedConsumers,
-                    string.Join('，', segments));
+                stat.StatisticsConsumerMenuLines = ImmutableArray.CreateRange(segments);
             }
             else
             {
-                stat.StatisticsConsumerMenuText = string.Format(
-                    CultureInfo.CurrentCulture,
-                    SH.ViewPageCultivationStatisticsUnfinishedConsumers,
-                    SH.ViewPageCultivationStatisticsUnfinishedConsumersEmptyList);
+                stat.StatisticsConsumerMenuLines = ImmutableArray.Create(SH.ViewPageCultivationStatisticsUnfinishedConsumersEmptyList);
             }
         }
     }

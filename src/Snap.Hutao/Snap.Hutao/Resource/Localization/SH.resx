@@ -2486,9 +2486,6 @@
   <data name="ViewPageCultivationMaterialStatistics" xml:space="preserve">
     <value>材料统计</value>
   </data>
-  <data name="ViewPageCultivationStatisticsUnfinishedConsumers" xml:space="preserve">
-    <value>未完成：{0}</value>
-  </data>
   <data name="ViewPageCultivationStatisticsUnfinishedConsumersEmptyList" xml:space="preserve">
     <value>无未勾选条目</value>
   </data>

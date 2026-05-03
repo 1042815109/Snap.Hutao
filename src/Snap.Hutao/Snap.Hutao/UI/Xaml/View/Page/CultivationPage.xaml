@@ -229,9 +229,21 @@
             <DataTemplate x:Key="StatisticsItemTemplate" x:DataType="shvcu:StatisticsCultivateItem">
                 <Border Background="Transparent" IsRightTapEnabled="True">
                     <Border.ContextFlyout>
-                        <MenuFlyout>
-                            <MenuFlyoutItem IsEnabled="False" MaxWidth="360" Text="{Binding StatisticsConsumerMenuText, Mode=OneWay}"/>
-                        </MenuFlyout>
+                        <Flyout FlyoutPresenterStyle="{ThemeResource FlyoutPresenterPadding0Style}">
+                            <ScrollViewer MaxHeight="320" MinWidth="220" Padding="12,10">
+                                <ItemsControl ItemsSource="{Binding StatisticsConsumerMenuLines, Mode=OneWay}">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate x:DataType="x:String">
+                                            <TextBlock
+                                                Margin="0,3"
+                                                Style="{ThemeResource BodyTextBlockStyle}"
+                                                Text="{x:Bind Mode=OneWay}"
+                                                TextWrapping="WrapWholeWords"/>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </ScrollViewer>
+                        </Flyout>
                     </Border.ContextFlyout>
                     <shuxcc:HorizontalCard Background="{Binding IsToday, Converter={ThemeResource BoolToStatisticsBrushSelector}}">
                     <shuxcc:HorizontalCard.Left>

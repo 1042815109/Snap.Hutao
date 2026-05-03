@@ -2,6 +2,7 @@
 // Licensed under the MIT license.
 
 using Snap.Hutao.Model.Metadata.Item;
+using System.Collections.Immutable;
 
 namespace Snap.Hutao.ViewModel.Cultivation;
 
@@ -67,9 +68,9 @@ internal sealed class StatisticsCultivateItem
     public bool IsToday { get => Inner.IsItemOfToday(offset, true); }
 
     /// <summary>
-    /// 材料统计右键菜单中展示的「未完成」养成条目说明（含需求量）。
+    /// 材料统计右键浮层中按行展示的「未完成」养成条目（每人一行，<c>名×数量</c>）。
     /// </summary>
-    public string StatisticsConsumerMenuText { get; set; } = string.Empty;
+    public ImmutableArray<string> StatisticsConsumerMenuLines { get; set; }
 
     internal bool ExcludedFromPresentation { get; set; }
 
