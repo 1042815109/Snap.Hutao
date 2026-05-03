@@ -394,7 +394,8 @@ internal sealed partial class CultivationService : ICultivationService
         ICultivationMetadataContext context,
         Dictionary<Guid, CultivateEntry> entryByInnerId)
     {
-        string countSuffix = $"×{item.Count}";
+        // 展示用量：全角括号比「×数量」更利落，且与中文混排更协调。
+        string countSuffix = $"\uFF08{item.Count}\uFF09";
 
         switch (entry.Type)
         {

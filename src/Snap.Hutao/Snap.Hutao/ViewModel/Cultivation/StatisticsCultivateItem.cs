@@ -68,7 +68,7 @@ internal sealed class StatisticsCultivateItem
     public bool IsToday { get => Inner.IsItemOfToday(offset, true); }
 
     /// <summary>
-    /// 材料统计右键浮层中按行展示的「未完成」养成条目（每人一行，名称前为角色/武器图标，<c>名×数量</c>）。
+    /// 材料统计右键浮层中按行展示的「未完成」养成条目（每人一行，名称前为角色/武器图标，需求量以括号标注）。
     /// </summary>
     public ImmutableArray<StatisticsConsumerMenuLine> StatisticsConsumerMenuLines { get; set; }
 

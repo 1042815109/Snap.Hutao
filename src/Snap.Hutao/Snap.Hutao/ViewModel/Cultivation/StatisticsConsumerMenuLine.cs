@@ -37,6 +37,7 @@ internal sealed class StatisticsConsumerMenuLine
 
     public string? SecondName { get; private init; }
 
+    /// <summary>计划需求量后缀，一般为全角括号包裹的数量 <c>（12）</c>。</summary>
     public string CountSuffix { get; private init; } = string.Empty;
 
     public static StatisticsConsumerMenuLine Plain(string message)
