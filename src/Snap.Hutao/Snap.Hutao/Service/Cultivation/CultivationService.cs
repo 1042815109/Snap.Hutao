@@ -345,6 +345,13 @@ internal sealed partial class CultivationService : ICultivationService
         ICultivationRepository cultivationRepository)
     {
         ImmutableArray<(CultivateEntry Entry, CultivateItem Item)> pairs = cultivationRepository.GetCultivateEntryItemPairsByProjectId(projectId);
+        ImmutableArray<CultivateEntry> projectEntries = cultivationRepository.GetCultivateEntryImmutableArrayByProjectId(projectId);
+        Dictionary<Guid, CultivateEntry> entryByInnerId = new(projectEntries.Length);
+        foreach (ref readonly CultivateEntry e in projectEntries.AsSpan())
+        {
+            entryByInnerId[e.InnerId] = e;
+        }
+
         Dictionary<uint, List<string>> unfinishedSegmentsByMaterial = [];
 
         foreach ((CultivateEntry entry, CultivateItem item) in pairs.AsSpan())
@@ -354,7 +361,7 @@ internal sealed partial class CultivationService : ICultivationService
                 continue;
             }
 
-            string name = FormatStatisticsConsumerEntryName(entry, context);
+            string name = FormatStatisticsConsumerEntryName(entry, context, entryByInnerId);
             string segment = $"{name}×{item.Count}";
             ref List<string>? list = ref CollectionsMarshal.GetValueRefOrAddDefault(unfinishedSegmentsByMaterial, item.ItemId, out _);
             list ??= [];
@@ -381,13 +388,39 @@ internal sealed partial class CultivationService : ICultivationService
         }
     }
 
-    private static string FormatStatisticsConsumerEntryName(CultivateEntry entry, ICultivationMetadataContext context)
+    private static string FormatStatisticsConsumerEntryName(
+        CultivateEntry entry,
+        ICultivationMetadataContext context,
+        Dictionary<Guid, CultivateEntry> entryByInnerId)
     {
         return entry.Type switch
         {
             CultivateType.AvatarAndSkill => context.GetAvatarItem(entry.Id).Name,
-            CultivateType.Weapon => context.GetWeaponItem(entry.Id).Name,
+            CultivateType.Weapon => FormatStatisticsConsumerWeaponEntryName(entry, context, entryByInnerId),
             _ => Material.Default.Name,
         };
+    }
+
+    /// <summary>
+    /// 材料统计右键「未完成」：武器条目在有关联角色条目时展示「角色名·武器名」，否则（含历史无 RelatedEntryId）仅武器名。
+    /// </summary>
+    private static string FormatStatisticsConsumerWeaponEntryName(
+        CultivateEntry entry,
+        ICultivationMetadataContext context,
+        Dictionary<Guid, CultivateEntry> entryByInnerId)
+    {
+        string weaponName = context.GetWeaponItem(entry.Id).Name;
+        if (entry.RelatedEntryId is not Guid relatedId)
+        {
+            return weaponName;
+        }
+
+        if (!entryByInnerId.TryGetValue(relatedId, out CultivateEntry? related) || related.Type is not CultivateType.AvatarAndSkill)
+        {
+            return weaponName;
+        }
+
+        string avatarName = context.GetAvatarItem(related.Id).Name;
+        return $"{avatarName}·{weaponName}";
     }
 }
