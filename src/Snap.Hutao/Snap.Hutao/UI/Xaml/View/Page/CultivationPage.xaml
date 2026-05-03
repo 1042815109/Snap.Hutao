@@ -256,11 +256,40 @@
                                 VerticalAlignment="Center"
                                 Text="{Binding Inner.Name}"
                                 TextTrimming="CharacterEllipsis"/>
-                            <TextBlock
+                            <StackPanel
                                 Grid.Column="1"
-                                Margin="0,0,0,0"
                                 VerticalAlignment="Center"
-                                Text="{Binding FormattedCount}"/>
+                                Orientation="Horizontal"
+                                Spacing="0">
+                                <TextBlock
+                                    VerticalAlignment="Center"
+                                    Text="{Binding FormattedCount}"
+                                    Visibility="{Binding ShowNonMergeCompactCount, Converter={StaticResource BoolToVisibilityConverter}}"/>
+                                <StackPanel
+                                    Orientation="Horizontal"
+                                    Spacing="0"
+                                    Visibility="{Binding ShowMergeSpacedWithoutParen, Converter={StaticResource BoolToVisibilityConverter}}">
+                                    <TextBlock VerticalAlignment="Center" Text="{Binding DisplayCurrent, Mode=OneWay}"/>
+                                    <TextBlock VerticalAlignment="Center" Text="{Binding SlashCountSuffix, Mode=OneWay}"/>
+                                </StackPanel>
+                                <StackPanel
+                                    Orientation="Horizontal"
+                                    Spacing="0"
+                                    Visibility="{Binding ShowMergeInventoryParen, Converter={StaticResource BoolToVisibilityConverter}}">
+                                    <TextBlock VerticalAlignment="Center" Text="{Binding DisplayCurrent, Mode=OneWay}"/>
+                                    <TextBlock
+                                        VerticalAlignment="Center"
+                                        Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}"
+                                        Text="{Binding RawInventoryParenthetical, Mode=OneWay}"
+                                        Visibility="{Binding MergeInventoryParenUseBlue, Converter={StaticResource BoolToVisibilityConverter}}"/>
+                                    <TextBlock
+                                        VerticalAlignment="Center"
+                                        Foreground="{ThemeResource SystemFillColorCriticalBrush}"
+                                        Text="{Binding RawInventoryParenthetical, Mode=OneWay}"
+                                        Visibility="{Binding MergeInventoryParenUseRed, Converter={StaticResource BoolToVisibilityConverter}}"/>
+                                    <TextBlock VerticalAlignment="Center" Text="{Binding SlashCountSuffix, Mode=OneWay}"/>
+                                </StackPanel>
+                            </StackPanel>
                         </Grid>
                     </shuxcc:HorizontalCard.Right>
                 </shuxcc:HorizontalCard>

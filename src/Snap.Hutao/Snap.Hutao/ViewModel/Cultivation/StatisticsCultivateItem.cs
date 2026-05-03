@@ -40,6 +40,27 @@ internal sealed class StatisticsCultivateItem
 
     public string FormattedCount { get => $"{DisplayCurrent}/{Count}"; }
 
+    /// <summary>未启用合并展示链时，使用紧凑 <see cref="FormattedCount"/>。</summary>
+    public bool ShowNonMergeCompactCount { get => !MergeAdjustedCurrent.HasValue; }
+
+    /// <summary>已合并但合成前后有效持有量与背包数一致，不显示括号，仅「合并后 / 需求」加空格。</summary>
+    public bool ShowMergeSpacedWithoutParen { get => MergeAdjustedCurrent.HasValue && DisplayCurrent == Current; }
+
+    /// <summary>合并后有效持有与背包原数不同，显示「(背包原数)」并着色。</summary>
+    public bool ShowMergeInventoryParen { get => MergeAdjustedCurrent.HasValue && DisplayCurrent != Current; }
+
+    /// <summary>合并后 &gt; 背包原数：括号用强调色（蓝系）。</summary>
+    public bool MergeInventoryParenUseBlue { get => MergeAdjustedCurrent.HasValue && DisplayCurrent > Current; }
+
+    /// <summary>合并后 &lt; 背包原数：括号用警告色（红系，低级被向上消耗）。</summary>
+    public bool MergeInventoryParenUseRed { get => MergeAdjustedCurrent.HasValue && DisplayCurrent < Current; }
+
+    /// <summary>背包同步原数，带前导空格与括号。</summary>
+    public string RawInventoryParenthetical { get => $" ({Current})"; }
+
+    /// <summary>「 / 需求数」段，含前导空格。</summary>
+    public string SlashCountSuffix { get => $" / {Count}"; }
+
     public bool IsToday { get => Inner.IsItemOfToday(offset, true); }
 
     internal bool ExcludedFromPresentation { get; set; }
