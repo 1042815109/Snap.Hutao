@@ -29,6 +29,12 @@ internal interface ICultivationService
 
     ValueTask<Guid?> TryGetAvatarCultivateEntryInnerIdAsync(uint avatarId);
 
+    /// <summary>
+    /// 当前计划中尚无该角色的养成条目时，插入一条无材料行的角色占位条目（等级信息与 delta 一致），供武器 RelatedEntryId 关联。
+    /// 若已存在角色条目则返回其 InnerId。
+    /// </summary>
+    ValueTask<Guid?> EnsureAvatarAssociationStubAsync(uint avatarId, LevelInformation levelInformation);
+
     void SaveCultivateItem(CultivateItemView item);
 
     ValueTask<ProjectAddResultKind> TryAddProjectAsync(CultivateProject project);

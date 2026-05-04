@@ -77,6 +77,11 @@ internal sealed partial class CultivationService : ICultivationService
             foreach (ref readonly CultivateEntry entry in entries.AsSpan())
             {
                 ImmutableArray<CultivateItem> items = cultivationRepository.GetCultivateItemImmutableArrayByEntryId(entry.InnerId);
+                if (IsHiddenAssociationOnlyAvatarEntry(entry, items.Length))
+                {
+                    continue;
+                }
+
                 ImmutableArray<CultivateItemView>.Builder entryItems = ImmutableArray.CreateBuilder<CultivateItemView>(items.Length);
 
                 foreach (ref readonly CultivateItem cultivateItem in items.AsSpan())
@@ -265,6 +270,34 @@ internal sealed partial class CultivationService : ICultivationService
 
         await taskContext.SwitchToBackgroundAsync();
         return cultivationRepository.TryGetAvatarCultivateEntryInnerId(projects.CurrentItem.InnerId, avatarId);
+    }
+
+    public async ValueTask<Guid?> EnsureAvatarAssociationStubAsync(uint avatarId, LevelInformation levelInformation)
+    {
+        IAdvancedDbCollectionView<CultivateProject> projects = await GetProjectCollectionAsync().ConfigureAwait(false);
+        if (!await EnsureCurrentProjectAsync(projects).ConfigureAwait(false))
+        {
+            return null;
+        }
+
+        ArgumentNullException.ThrowIfNull(projects.CurrentItem);
+
+        await taskContext.SwitchToBackgroundAsync();
+
+        Guid projectId = projects.CurrentItem.InnerId;
+        if (cultivationRepository.TryGetAvatarCultivateEntryInnerId(projectId, avatarId) is Guid existing)
+        {
+            return existing;
+        }
+
+        CultivateEntry entry = CultivateEntry.From(projectId, CultivateType.AvatarAndSkill, avatarId);
+        cultivationRepository.AddCultivateEntry(entry);
+
+        CultivateEntryLevelInformation level = CultivateEntryLevelInformation.From(entry.InnerId, CultivateType.AvatarAndSkill, levelInformation);
+        cultivationRepository.AddLevelInformation(level);
+
+        entryCollectionCache.TryRemove(projectId, out _);
+        return entry.InnerId;
     }
 
     public async ValueTask<ProjectAddResultKind> TryAddProjectAsync(CultivateProject project)
@@ -482,5 +515,26 @@ internal sealed partial class CultivationService : ICultivationService
 
         string avatarName = context.GetAvatarItem(related.Id).Name;
         return $"{avatarName}·{weaponName}";
+    }
+
+    /// <summary>
+    /// 无材料的「已满配」角色占位行不在养成列表展示（仍为武器的 RelatedEntryId 解析目标）。
+    /// </summary>
+    private static bool IsHiddenAssociationOnlyAvatarEntry(CultivateEntry entry, int cultivateItemCount)
+    {
+        if (entry.Type is not CultivateType.AvatarAndSkill || cultivateItemCount != 0)
+        {
+            return false;
+        }
+
+        if (entry.LevelInformation is not CultivateEntryLevelInformation li)
+        {
+            return false;
+        }
+
+        return li.AvatarLevelFrom == li.AvatarLevelTo
+            && li.SkillALevelFrom == li.SkillALevelTo
+            && li.SkillELevelFrom == li.SkillELevelTo
+            && li.SkillQLevelFrom == li.SkillQLevelTo;
     }
 }

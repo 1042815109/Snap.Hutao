@@ -364,6 +364,16 @@ internal sealed partial class AvatarPropertyViewModel : Abstraction.ViewModel, I
             relatedAvatarEntryId = await scopeContext.CultivationService.TryGetAvatarCultivateEntryInnerIdAsync(options.Delta.AvatarId).ConfigureAwait(false);
         }
 
+        if (relatedAvatarEntryId is null && avatarSave.Kind is ConsumptionSaveResultKind.NoItem)
+        {
+            relatedAvatarEntryId = await scopeContext.CultivationService.TryGetAvatarCultivateEntryInnerIdAsync(options.Delta.AvatarId).ConfigureAwait(false);
+        }
+
+        if (relatedAvatarEntryId is null && !consumption.WeaponConsume.IsEmpty)
+        {
+            relatedAvatarEntryId = await scopeContext.CultivationService.EnsureAvatarAssociationStubAsync(options.Delta.AvatarId, levelInformation).ConfigureAwait(false);
+        }
+
         InputConsumption weaponInput = new()
         {
             Type = CultivateType.Weapon,
