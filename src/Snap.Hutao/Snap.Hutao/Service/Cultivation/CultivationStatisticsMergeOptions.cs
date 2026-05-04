@@ -3,4 +3,7 @@
 
 namespace Snap.Hutao.Service.Cultivation;
 
-internal readonly record struct CultivationStatisticsMergeOptions(bool MergeUpgradeMaterials, bool TalentSynthCritTenPercent);
+internal readonly record struct CultivationStatisticsMergeOptions(
+    bool MergeUpgradeMaterials,
+    bool TalentSynthCritTenPercent,
+    bool WeeklyBossMaterialInterchange);

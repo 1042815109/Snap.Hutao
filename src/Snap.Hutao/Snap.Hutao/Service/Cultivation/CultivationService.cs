@@ -152,6 +152,10 @@ internal sealed partial class CultivationService : ICultivationService
             }
 
             CultivationStatisticsSurplusMerge.Apply(resultItems, context, mergeOptions);
+            CultivationStatisticsWeeklyBossInterchange.Apply(
+                resultItems,
+                context.WeeklyBossMaterialInterchangeGroups,
+                mergeOptions.WeeklyBossMaterialInterchange);
             ApplyStatisticsConsumerMenuLines(resultItems, projectId, context, cultivationRepository, token);
 
             return new(resultItems);

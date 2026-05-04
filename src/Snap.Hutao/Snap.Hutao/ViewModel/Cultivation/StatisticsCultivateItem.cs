@@ -35,26 +35,33 @@ internal sealed class StatisticsCultivateItem
     /// </summary>
     public uint? MergeAdjustedCurrent { get; set; }
 
-    public uint DisplayCurrent { get => MergeAdjustedCurrent ?? Current; }
+    /// <summary>
+    /// 周本材料异梦转化池内调配后的展示用持有量；未启用时为 <see langword="null"/>。在 <see cref="MergeAdjustedCurrent"/> 之后应用。
+    /// </summary>
+    public uint? WeeklyBossInterchangeAdjustedCurrent { get; set; }
+
+    public uint DisplayCurrent { get => WeeklyBossInterchangeAdjustedCurrent ?? MergeAdjustedCurrent ?? Current; }
 
     public bool IsFinished { get => DisplayCurrent >= Count; }
 
     public string FormattedCount { get => $"{DisplayCurrent}/{Count}"; }
 
+    private bool HasStatisticsAdjustedDisplay { get => MergeAdjustedCurrent.HasValue || WeeklyBossInterchangeAdjustedCurrent.HasValue; }
+
     /// <summary>未启用合并展示链时，使用紧凑 <see cref="FormattedCount"/>。</summary>
-    public bool ShowNonMergeCompactCount { get => !MergeAdjustedCurrent.HasValue; }
+    public bool ShowNonMergeCompactCount { get => !HasStatisticsAdjustedDisplay; }
 
     /// <summary>已合并但合成前后有效持有量与背包数一致，不显示括号，仅「合并后 / 需求」加空格。</summary>
-    public bool ShowMergeSpacedWithoutParen { get => MergeAdjustedCurrent.HasValue && DisplayCurrent == Current; }
+    public bool ShowMergeSpacedWithoutParen { get => HasStatisticsAdjustedDisplay && DisplayCurrent == Current; }
 
     /// <summary>合并后有效持有与背包原数不同，显示「合并后 (背包原数)」。</summary>
-    public bool ShowMergeInventoryParen { get => MergeAdjustedCurrent.HasValue && DisplayCurrent != Current; }
+    public bool ShowMergeInventoryParen { get => HasStatisticsAdjustedDisplay && DisplayCurrent != Current; }
 
     /// <summary>首位合并显示量 &gt; 背包原数时着红色（相对原库存变多）。</summary>
-    public bool MergeDisplayLeadUseRed { get => MergeAdjustedCurrent.HasValue && DisplayCurrent > Current; }
+    public bool MergeDisplayLeadUseRed { get => HasStatisticsAdjustedDisplay && DisplayCurrent > Current; }
 
     /// <summary>首位合并显示量 &lt; 背包原数时着绿色（相对原库存变少，如低档被向上消耗）。</summary>
-    public bool MergeDisplayLeadUseGreen { get => MergeAdjustedCurrent.HasValue && DisplayCurrent < Current; }
+    public bool MergeDisplayLeadUseGreen { get => HasStatisticsAdjustedDisplay && DisplayCurrent < Current; }
 
     /// <summary>背包原数，紧接在合并后数字后，如 <c>(44)</c>。</summary>
     public string RawInventoryParenthetical { get => $"({Current})"; }

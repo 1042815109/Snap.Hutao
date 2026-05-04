@@ -2480,6 +2480,9 @@
   <data name="ViewPageCultivationTalentSynthCritTenPercentLabel" xml:space="preserve">
     <value>角色天赋（10%）</value>
   </data>
+  <data name="ViewPageCultivationWeeklyBossMaterialInterchangeLabel" xml:space="preserve">
+    <value>周本材料转化</value>
+  </data>
   <data name="ViewPageCultivationMaterialListResinStatisticsLabel" xml:space="preserve">
     <value>树脂预估</value>
   </data>

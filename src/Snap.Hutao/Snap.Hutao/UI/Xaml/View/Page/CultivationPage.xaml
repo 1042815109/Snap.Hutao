@@ -588,6 +588,12 @@
                                     IsEnabled="{Binding MergeUpgradeMaterials}"
                                     Label="{shuxm:ResourceString Name=ViewPageCultivationTalentSynthCritTenPercentLabel}"
                                     Visibility="{Binding ElementName=MaterialListPivot, Path=SelectedItem.Tag, Converter={StaticResource MaterialListSelectedItemIsStatisticsViewConverter}}"/>
+                                <AppBarToggleButton
+                                    Command="{Binding RefreshStatisticsItemsCommand}"
+                                    Icon="{shuxm:FontIcon Glyph=&#xE8FD;}"
+                                    IsChecked="{Binding WeeklyBossMaterialInterchange, Mode=TwoWay}"
+                                    Label="{shuxm:ResourceString Name=ViewPageCultivationWeeklyBossMaterialInterchangeLabel}"
+                                    Visibility="{Binding ElementName=MaterialListPivot, Path=SelectedItem.Tag, Converter={StaticResource MaterialListSelectedItemIsStatisticsViewConverter}}"/>
                                 <AppBarButton Icon="{shuxm:FontIcon Glyph=&#xE946;}" Label="{shuxm:ResourceString Name=ViewPageCultivationMaterialListResinStatisticsLabel}">
                                     <AppBarButton.Flyout>
                                         <Flyout FlyoutPresenterStyle="{ThemeResource FlyoutPresenterPadding0Style}" Placement="BottomEdgeAlignedRight">

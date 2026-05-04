@@ -2429,6 +2429,9 @@ Space Available: {2}</value>
   <data name="ViewPageCultivationTalentSynthCritTenPercentLabel" xml:space="preserve">
     <value>Character talent (10%)</value>
   </data>
+  <data name="ViewPageCultivationWeeklyBossMaterialInterchangeLabel" xml:space="preserve">
+    <value>Weekly boss material interchange</value>
+  </data>
   <data name="ViewPageCultivationMaterialListResinStatisticsLabel" xml:space="preserve">
     <value>Resin Estimation</value>
   </data>

@@ -78,6 +78,9 @@ internal sealed partial class CultivationViewModel : Abstraction.ViewModel
     public partial bool TalentSynthCritTenPercent { get; set; } = LocalSetting.Get(SettingKeys.CultivationStatisticsTalentSynthCritTenPercent, false);
 
     [ObservableProperty]
+    public partial bool WeeklyBossMaterialInterchange { get; set; } = LocalSetting.Get(SettingKeys.CultivationStatisticsWeeklyBossMaterialInterchange, false);
+
+    [ObservableProperty]
     public partial ObservableCollection<StatisticsCultivateItem>? StatisticsItems { get; set; }
 
     [ObservableProperty]
@@ -365,8 +368,10 @@ internal sealed partial class CultivationViewModel : Abstraction.ViewModel
 
         bool merge = MergeUpgradeMaterials;
         bool talentCrit = merge && TalentSynthCritTenPercent;
+        bool weeklyBoss = WeeklyBossMaterialInterchange;
         LocalSetting.Set(SettingKeys.CultivationStatisticsMergeUpgradeMaterials, merge);
         LocalSetting.Set(SettingKeys.CultivationStatisticsTalentSynthCritTenPercent, talentCrit);
+        LocalSetting.Set(SettingKeys.CultivationStatisticsWeeklyBossMaterialInterchange, weeklyBoss);
 
         CancellationToken token = exclusiveTokenProvider.GetNewToken();
         StatisticsCultivateItemCollection statistics;
@@ -374,7 +379,7 @@ internal sealed partial class CultivationViewModel : Abstraction.ViewModel
         try
         {
             statistics = await cultivationService
-                .GetStatisticsCultivateItemCollectionAsync(Projects.CurrentItem, metadataContext, new CultivationStatisticsMergeOptions(merge, talentCrit), token)
+                .GetStatisticsCultivateItemCollectionAsync(Projects.CurrentItem, metadataContext, new CultivationStatisticsMergeOptions(merge, talentCrit, weeklyBoss), token)
                 .ConfigureAwait(false);
             resinStatistics = await cultivationService.GetResinStatisticsAsync(statistics, token).ConfigureAwait(false);
         }
