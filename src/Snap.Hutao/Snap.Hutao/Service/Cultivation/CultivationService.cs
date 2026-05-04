@@ -129,6 +129,7 @@ internal sealed partial class CultivationService : ICultivationService
             token.ThrowIfCancellationRequested();
             Dictionary</* ItemId */ uint, StatisticsCultivateItem> resultItems = [];
             Guid projectId = cultivateProject.InnerId;
+            Dictionary<uint, uint> inventoryCounts = [];
 
             foreach (ref readonly CultivateEntry entry in cultivationRepository.GetCultivateEntryImmutableArrayByProjectId(projectId).AsSpan())
             {
@@ -153,12 +154,20 @@ internal sealed partial class CultivationService : ICultivationService
             foreach (ref readonly InventoryItem inventoryItem in inventoryRepository.GetInventoryItemImmutableArrayByProjectId(projectId).AsSpan())
             {
                 token.ThrowIfCancellationRequested();
+                inventoryCounts[inventoryItem.ItemId] = inventoryItem.Count;
                 ref StatisticsCultivateItem existedItem = ref CollectionsMarshal.GetValueRefOrNullRef(resultItems, inventoryItem.ItemId);
                 if (!Unsafe.IsNullRef(in existedItem))
                 {
                     existedItem.Current = inventoryItem.Count;
                 }
             }
+
+            AddWeeklyBossGroupInventoryDonors(
+                resultItems,
+                inventoryCounts,
+                context,
+                cultivateProject.ServerTimeZoneOffset,
+                mergeOptions.WeeklyBossMaterialInterchange);
 
             CultivationStatisticsSurplusMerge.Apply(resultItems, context, mergeOptions);
             CultivationStatisticsWeeklyBossInterchange.Apply(
@@ -168,6 +177,55 @@ internal sealed partial class CultivationService : ICultivationService
             ApplyStatisticsConsumerMenuLines(resultItems, projectId, context, cultivationRepository, token);
 
             return new(resultItems);
+        }
+    }
+
+    private static void AddWeeklyBossGroupInventoryDonors(
+        Dictionary<uint, StatisticsCultivateItem> items,
+        Dictionary<uint, uint> inventoryCounts,
+        ICultivationMetadataContext context,
+        TimeSpan offset,
+        bool enabled)
+    {
+        if (!enabled || context.WeeklyBossMaterialInterchangeGroups.IsDefaultOrEmpty)
+        {
+            return;
+        }
+
+        foreach (ImmutableArray<MaterialId> group in context.WeeklyBossMaterialInterchangeGroups)
+        {
+            bool anyPlannedInGroup = false;
+            foreach (MaterialId mid in group)
+            {
+                if (items.ContainsKey(mid))
+                {
+                    anyPlannedInGroup = true;
+                    break;
+                }
+            }
+
+            if (!anyPlannedInGroup)
+            {
+                continue;
+            }
+
+            foreach (MaterialId mid in group)
+            {
+                uint id = mid;
+                if (items.ContainsKey(id))
+                {
+                    continue;
+                }
+
+                if (!inventoryCounts.TryGetValue(id, out uint inv) || inv is 0U)
+                {
+                    continue;
+                }
+
+                StatisticsCultivateItem donor = StatisticsCultivateItem.Create(context.GetMaterial(id), offset);
+                donor.Current = inv;
+                items[id] = donor;
+            }
         }
     }
 
