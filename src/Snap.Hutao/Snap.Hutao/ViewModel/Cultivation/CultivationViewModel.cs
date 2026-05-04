@@ -2,6 +2,7 @@
 // Licensed under the MIT license.
 
 using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Messaging;
 using Microsoft.UI.Xaml.Controls;
 using Snap.Hutao.Core;
 using Snap.Hutao.Core.Database;
@@ -29,7 +30,7 @@ namespace Snap.Hutao.ViewModel.Cultivation;
 [SuppressMessage("", "CA1001")]
 [BindableCustomPropertyProvider]
 [Service(ServiceLifetime.Scoped)]
-internal sealed partial class CultivationViewModel : Abstraction.ViewModel
+internal sealed partial class CultivationViewModel : Abstraction.ViewModel, IRecipient<CultivationProjectEntriesChangedMessage>
 {
     private readonly ExclusiveTokenProvider exclusiveTokenProvider = new();
 
@@ -130,6 +131,17 @@ internal sealed partial class CultivationViewModel : Abstraction.ViewModel
     private void OnCurrentProjectChanged(object? sender, object? e)
     {
         UpdateEntryCollectionAsync(Projects?.CurrentItem).SafeForget();
+    }
+
+    public async void Receive(CultivationProjectEntriesChangedMessage message)
+    {
+        await taskContext.SwitchToMainThreadAsync();
+        if (Projects?.CurrentItem is null)
+        {
+            return;
+        }
+
+        await UpdateEntryCollectionAsync(Projects.CurrentItem).ConfigureAwait(false);
     }
 
     [Command("AddProjectCommand")]

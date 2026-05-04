@@ -23,6 +23,11 @@ internal interface ICultivationService
 
     ValueTask RemoveCultivateEntryAsync(Guid entryId);
 
+    /// <summary>
+    /// 移除当前选中养成计划中角色与武器类型的全部养成条目。
+    /// </summary>
+    ValueTask RemoveAvatarAndWeaponEntriesForCurrentProjectAsync();
+
     ValueTask RemoveProjectAsync(CultivateProject project);
 
     ValueTask<ConsumptionSaveResult> SaveConsumptionAsync(InputConsumption inputConsumption);

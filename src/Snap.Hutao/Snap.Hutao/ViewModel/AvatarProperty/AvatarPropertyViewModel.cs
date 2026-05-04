@@ -21,6 +21,7 @@ using Snap.Hutao.Service.Notification;
 using Snap.Hutao.Service.User;
 using Snap.Hutao.UI.Xaml.Control.AutoSuggestBox;
 using Snap.Hutao.UI.Xaml.View.Dialog;
+using Snap.Hutao.ViewModel.Cultivation;
 using Snap.Hutao.ViewModel.User;
 using Snap.Hutao.Web.Hoyolab.Takumi.Event.Calculate;
 using System.Collections.Immutable;
@@ -286,6 +287,11 @@ internal sealed partial class AvatarPropertyViewModel : Abstraction.ViewModel, I
         BatchCultivateResult result = default;
         using (await scopeContext.ContentDialogFactory.BlockAsync(progressDialog).ConfigureAwait(false))
         {
+            if (baseline.ClearAvatarAndWeaponEntriesBeforeSync)
+            {
+                await scopeContext.CultivationService.RemoveAvatarAndWeaponEntriesForCurrentProjectAsync().ConfigureAwait(false);
+            }
+
             ImmutableArray<CalculatorAvatarPromotionDelta>.Builder deltasBuilder = ImmutableArray.CreateBuilder<CalculatorAvatarPromotionDelta>();
             foreach (AvatarView avatar in targetAvatars)
             {
@@ -305,7 +311,7 @@ internal sealed partial class AvatarPropertyViewModel : Abstraction.ViewModel, I
 
             foreach ((CalculatorConsumption consumption, CalculatorAvatarPromotionDelta delta) in batchConsumption.Items.Zip(deltas))
             {
-                if (!await SaveCultivationAsync(consumption, new(delta, baseline.Strategy), true).ConfigureAwait(false))
+                if (!await SaveCultivationAsync(consumption, new CultivatePromotionDeltaOptions(delta, baseline.Strategy), true).ConfigureAwait(false))
                 {
                     break;
                 }
@@ -313,6 +319,8 @@ internal sealed partial class AvatarPropertyViewModel : Abstraction.ViewModel, I
                 ++result.SucceedCount;
             }
         }
+
+        scopeContext.Messenger.Send(CultivationProjectEntriesChangedMessage.Empty);
 
         InfoBarMessage message = result.SkippedCount > 0
             ? InfoBarMessage.Warning(SH.FormatViewModelCultivationBatchAddIncompleted(result.SucceedCount, result.SkippedCount))

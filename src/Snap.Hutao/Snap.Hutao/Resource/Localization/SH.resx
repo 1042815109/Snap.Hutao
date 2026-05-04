@@ -1391,6 +1391,9 @@
   <data name="ViewDialogCultivateBatchWeaponLevelTarget" xml:space="preserve">
     <value>武器目标等级</value>
   </data>
+  <data name="ViewDialogCultivateBatchClearAvatarAndWeaponEntries" xml:space="preserve">
+    <value>更新计划前先清空已有角色与武器条目</value>
+  </data>
   <data name="ViewDialogCultivateProjectInputPlaceholder" xml:space="preserve">
     <value>在此处输入计划名称</value>
   </data>

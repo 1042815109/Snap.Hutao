@@ -178,6 +178,48 @@ internal sealed partial class CultivationService : ICultivationService
         cultivationRepository.RemoveCultivateEntryById(entryId);
     }
 
+    public async ValueTask RemoveAvatarAndWeaponEntriesForCurrentProjectAsync()
+    {
+        IAdvancedDbCollectionView<CultivateProject> projects = await GetProjectCollectionAsync().ConfigureAwait(false);
+        if (!await EnsureCurrentProjectAsync(projects).ConfigureAwait(false))
+        {
+            return;
+        }
+
+        ArgumentNullException.ThrowIfNull(projects.CurrentItem);
+        Guid projectId = projects.CurrentItem.InnerId;
+
+        await taskContext.SwitchToBackgroundAsync();
+
+        ImmutableArray<CultivateEntry> entries = cultivationRepository.GetCultivateEntryImmutableArrayByProjectId(projectId);
+        List<Guid> weaponEntryIds = new(entries.Length);
+        List<Guid> avatarEntryIds = new(entries.Length);
+        foreach (ref readonly CultivateEntry entry in entries.AsSpan())
+        {
+            switch (entry.Type)
+            {
+                case CultivateType.Weapon:
+                    weaponEntryIds.Add(entry.InnerId);
+                    break;
+                case CultivateType.AvatarAndSkill:
+                    avatarEntryIds.Add(entry.InnerId);
+                    break;
+            }
+        }
+
+        foreach (Guid id in weaponEntryIds)
+        {
+            cultivationRepository.RemoveCultivateEntryById(id);
+        }
+
+        foreach (Guid id in avatarEntryIds)
+        {
+            cultivationRepository.RemoveCultivateEntryById(id);
+        }
+
+        entryCollectionCache.TryRemove(projectId, out _);
+    }
+
     public void SaveCultivateItem(CultivateItemView item)
     {
         cultivationRepository.UpdateCultivateItem(item.Entity);

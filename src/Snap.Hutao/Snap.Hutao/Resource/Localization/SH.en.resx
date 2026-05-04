@@ -1349,6 +1349,9 @@ Space Available: {2}</value>
   <data name="ViewDialogCultivateBatchWeaponLevelTarget" xml:space="preserve">
     <value>Weapon Target Level</value>
   </data>
+  <data name="ViewDialogCultivateBatchClearAvatarAndWeaponEntries" xml:space="preserve">
+    <value>Clear existing character and weapon entries before updating</value>
+  </data>
   <data name="ViewDialogCultivateProjectInputPlaceholder" xml:space="preserve">
     <value>Enter the plan name here</value>
   </data>

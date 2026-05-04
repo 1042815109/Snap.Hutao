@@ -10,6 +10,7 @@ using Snap.Hutao.Web.Hoyolab.Takumi.Event.Calculate;
 namespace Snap.Hutao.UI.Xaml.View.Dialog;
 
 [DependencyProperty<AvatarPromotionDelta>("PromotionDelta", NotNull = true, CreateDefaultValueCallbackName = nameof(CreatePromotionDeltaDefaultValue))]
+[DependencyProperty<bool>("ClearAvatarAndWeaponEntriesBeforeSync", DefaultValue = false, NotNull = true)]
 internal sealed partial class CultivatePromotionDeltaBatchDialog : ContentDialog
 {
     private readonly IContentDialogFactory contentDialogFactory;
@@ -45,7 +46,7 @@ internal sealed partial class CultivatePromotionDeltaBatchDialog : ContentDialog
             LocalSetting.Set(SettingKeys.CultivationWeapon90LevelTarget, weapon.LevelTarget);
         }
 
-        return new(true, new(PromotionDelta, (ConsumptionSaveStrategyKind)SaveModeSelector.SelectedIndex));
+        return new(true, new CultivatePromotionDeltaOptions(PromotionDelta, (ConsumptionSaveStrategyKind)SaveModeSelector.SelectedIndex, ClearAvatarAndWeaponEntriesBeforeSync));
     }
 
     private static object CreatePromotionDeltaDefaultValue()

@@ -77,5 +77,10 @@
             <RadioButton Content="{shuxm:ResourceString Name=ViewDialogCultivationConsumptionSaveStrategyOverwriteExisting}"/>
             <RadioButton Content="{shuxm:ResourceString Name=ViewDialogCultivationConsumptionSaveStrategyCreateNewEntry}"/>
         </RadioButtons>
+
+        <CheckBox
+            Margin="0,13,0,0"
+            Content="{shuxm:ResourceString Name=ViewDialogCultivateBatchClearAvatarAndWeaponEntries}"
+            IsChecked="{x:Bind ClearAvatarAndWeaponEntriesBeforeSync, Mode=TwoWay}"/>
     </StackPanel>
 </ContentDialog>
