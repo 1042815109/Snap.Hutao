@@ -105,7 +105,18 @@ internal sealed partial class InventoryService : IInventoryService
         {
             static IEnumerable<InventoryItem> ToInventoryItems(ImmutableArray<Item> consumeItems, Guid projectId)
             {
-                return consumeItems.SelectAsArray(static (item, pid) => InventoryItem.From(pid, item.Id, (uint)((int)item.Num - item.LackNum)), projectId);
+                static uint ToSafeCount(Item item)
+                {
+                    long delta = (long)item.Num - item.LackNum;
+                    if (delta <= 0)
+                    {
+                        return 0U;
+                    }
+
+                    return delta >= uint.MaxValue ? uint.MaxValue : (uint)delta;
+                }
+
+                return consumeItems.SelectAsArray(static (item, pid) => InventoryItem.From(pid, item.Id, ToSafeCount(item)), projectId);
             }
 
             if (syncToAllProjects)
