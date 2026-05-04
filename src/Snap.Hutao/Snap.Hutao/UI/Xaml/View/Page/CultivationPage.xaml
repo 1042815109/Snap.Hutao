@@ -232,65 +232,69 @@
             </DataTemplate>
 
             <DataTemplate x:Key="StatisticsItemTemplate" x:DataType="shvcu:StatisticsCultivateItem">
-                <Border Background="Transparent" IsRightTapEnabled="True">
-                    <Border.ContextFlyout>
-                        <Flyout FlyoutPresenterStyle="{ThemeResource FlyoutPresenterPadding0Style}">
-                            <ScrollViewer MaxHeight="320" MinWidth="220" Padding="12,10">
-                                <ItemsControl ItemsSource="{Binding StatisticsConsumerMenuLines, Mode=OneWay}">
-                                    <ItemsControl.ItemTemplate>
-                                        <DataTemplate x:DataType="shvcu:StatisticsConsumerMenuLine">
-                                            <Grid Margin="0,3">
-                                                <TextBlock
-                                                    Style="{ThemeResource BodyTextBlockStyle}"
-                                                    Text="{x:Bind PlainMessage, Mode=OneWay}"
-                                                    TextWrapping="WrapWholeWords"
-                                                    Visibility="{x:Bind IsPlainMessage, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}"/>
-                                                <StackPanel
-                                                    Orientation="Horizontal"
-                                                    Spacing="4"
-                                                    VerticalAlignment="Center"
-                                                    Visibility="{x:Bind ShowRichRow, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}">
-                                                    <shuxc:ItemIcon
-                                                        Width="28"
-                                                        Height="28"
-                                                        Icon="{x:Bind LeadingIcon, Mode=OneWay}"
-                                                        Quality="{x:Bind LeadingQuality, Mode=OneWay}"/>
+                <Border Background="Transparent">
+                    <shuxcc:HorizontalCard
+                        Background="{Binding IsToday, Converter={ThemeResource BoolToStatisticsBrushSelector}}"
+                        IsRightTapEnabled="True"
+                        IsTabStop="True"
+                        UseSystemFocusVisuals="True">
+                        <FrameworkElement.ContextFlyout>
+                            <Flyout FlyoutPresenterStyle="{ThemeResource FlyoutPresenterPadding0Style}">
+                                <ScrollViewer MaxHeight="320" MinWidth="220" Padding="12,10">
+                                    <ItemsControl ItemsSource="{Binding StatisticsConsumerMenuLines, Mode=OneWay}">
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate x:DataType="shvcu:StatisticsConsumerMenuLine">
+                                                <Grid Margin="0,3">
                                                     <TextBlock
-                                                        VerticalAlignment="Center"
                                                         Style="{ThemeResource BodyTextBlockStyle}"
-                                                        Text="{x:Bind FirstName, Mode=OneWay}"/>
+                                                        Text="{x:Bind PlainMessage, Mode=OneWay}"
+                                                        TextWrapping="WrapWholeWords"
+                                                        Visibility="{x:Bind IsPlainMessage, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}"/>
                                                     <StackPanel
                                                         Orientation="Horizontal"
                                                         Spacing="4"
                                                         VerticalAlignment="Center"
-                                                        Visibility="{x:Bind HasSecondIcon, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}">
-                                                        <TextBlock
-                                                            VerticalAlignment="Center"
-                                                            Style="{ThemeResource BodyTextBlockStyle}"
-                                                            Text="{x:Bind BetweenSeparator, Mode=OneWay}"/>
+                                                        Visibility="{x:Bind ShowRichRow, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}">
                                                         <shuxc:ItemIcon
                                                             Width="28"
                                                             Height="28"
-                                                            Icon="{x:Bind SecondIcon, Mode=OneWay}"
-                                                            Quality="{x:Bind SecondQuality, Mode=OneWay}"/>
+                                                            Icon="{x:Bind LeadingIcon, Mode=OneWay}"
+                                                            Quality="{x:Bind LeadingQuality, Mode=OneWay}"/>
                                                         <TextBlock
                                                             VerticalAlignment="Center"
                                                             Style="{ThemeResource BodyTextBlockStyle}"
-                                                            Text="{x:Bind SecondName, Mode=OneWay}"/>
+                                                            Text="{x:Bind FirstName, Mode=OneWay}"/>
+                                                        <StackPanel
+                                                            Orientation="Horizontal"
+                                                            Spacing="4"
+                                                            VerticalAlignment="Center"
+                                                            Visibility="{x:Bind HasSecondIcon, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}">
+                                                            <TextBlock
+                                                                VerticalAlignment="Center"
+                                                                Style="{ThemeResource BodyTextBlockStyle}"
+                                                                Text="{x:Bind BetweenSeparator, Mode=OneWay}"/>
+                                                            <shuxc:ItemIcon
+                                                                Width="28"
+                                                                Height="28"
+                                                                Icon="{x:Bind SecondIcon, Mode=OneWay}"
+                                                                Quality="{x:Bind SecondQuality, Mode=OneWay}"/>
+                                                            <TextBlock
+                                                                VerticalAlignment="Center"
+                                                                Style="{ThemeResource BodyTextBlockStyle}"
+                                                                Text="{x:Bind SecondName, Mode=OneWay}"/>
+                                                        </StackPanel>
+                                                        <TextBlock
+                                                            VerticalAlignment="Center"
+                                                            Style="{ThemeResource BodyTextBlockStyle}"
+                                                            Text="{x:Bind CountSuffix, Mode=OneWay}"/>
                                                     </StackPanel>
-                                                    <TextBlock
-                                                        VerticalAlignment="Center"
-                                                        Style="{ThemeResource BodyTextBlockStyle}"
-                                                        Text="{x:Bind CountSuffix, Mode=OneWay}"/>
-                                                </StackPanel>
-                                            </Grid>
-                                        </DataTemplate>
-                                    </ItemsControl.ItemTemplate>
-                                </ItemsControl>
-                            </ScrollViewer>
-                        </Flyout>
-                    </Border.ContextFlyout>
-                    <shuxcc:HorizontalCard Background="{Binding IsToday, Converter={ThemeResource BoolToStatisticsBrushSelector}}">
+                                                </Grid>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+                                </ScrollViewer>
+                            </Flyout>
+                        </FrameworkElement.ContextFlyout>
                     <shuxcc:HorizontalCard.Left>
                         <Grid Grid.Column="0">
                             <shuxc:ItemIcon

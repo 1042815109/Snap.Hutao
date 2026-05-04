@@ -54,22 +54,17 @@ internal sealed partial class CultivationRepository : ICultivationRepository
 
     public Guid? TryGetAvatarCultivateEntryInnerId(Guid projectId, uint avatarId)
     {
-        ImmutableArray<CultivateEntry> entries = GetCultivateEntryImmutableArrayByProjectIdAndItemId(projectId, avatarId);
-        Guid? last = null;
-        foreach (ref readonly CultivateEntry entry in entries.AsSpan())
+        // NOTE: InnerId(Guid) 的大小不代表插入顺序；这里使用 SQLite 的 rowid 选择最新插入的一条。
+        using (IServiceScope scope = ServiceProvider.CreateScope())
         {
-            if (entry.Type != CultivateType.AvatarAndSkill)
-            {
-                continue;
-            }
-
-            if (last is null || entry.InnerId.CompareTo(last.Value) > 0)
-            {
-                last = entry.InnerId;
-            }
+            AppDbContext db = scope.GetAppDbContext();
+            return db.Set<CultivateEntry>()
+                .AsNoTracking()
+                .Where(e => e.ProjectId == projectId && e.Id == avatarId && e.Type == CultivateType.AvatarAndSkill)
+                .OrderByDescending(e => EF.Property<long>(e, "rowid"))
+                .Select(e => (Guid?)e.InnerId)
+                .FirstOrDefault();
         }
-
-        return last;
     }
 
     public void AddCultivateEntry(CultivateEntry entry)

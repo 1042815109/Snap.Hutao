@@ -7,4 +7,11 @@ internal struct BatchCultivateResult
 {
     public int SucceedCount;
     public int SkippedCount;
+    public BatchCultivateStopReason StopReason;
+}
+
+internal enum BatchCultivateStopReason
+{
+    None = 0,
+    NoProject = 1,
 }

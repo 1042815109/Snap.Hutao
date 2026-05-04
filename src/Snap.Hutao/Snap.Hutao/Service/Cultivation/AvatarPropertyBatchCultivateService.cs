@@ -108,8 +108,10 @@ internal sealed partial class AvatarPropertyBatchCultivateService : IAvatarPrope
 
             if (baseline.SyncInventoryItems)
             {
-                CultivateProject? project = await cultivationService.GetCurrentProjectAsync().ConfigureAwait(false);
-                if (project is not null)
+                Snap.Hutao.Core.Database.IAdvancedDbCollectionView<CultivateProject> projects = await cultivationService.GetProjectCollectionAsync().ConfigureAwait(false);
+                await cultivationService.EnsureCurrentProjectAsync(projects).ConfigureAwait(false);
+
+                if (projects.CurrentItem is { } project)
                 {
                     IMetadataService metadataService = serviceProvider.GetRequiredService<IMetadataService>();
                     ICultivationMetadataContext cultivationContext = await metadataService
@@ -153,6 +155,7 @@ internal sealed partial class AvatarPropertyBatchCultivateService : IAvatarPrope
 
                 if (!await SaveCultivationAsync(consumption, new CultivatePromotionDeltaOptions(delta, baseline.Strategy)).ConfigureAwait(false))
                 {
+                    result.StopReason = BatchCultivateStopReason.NoProject;
                     break;
                 }
 

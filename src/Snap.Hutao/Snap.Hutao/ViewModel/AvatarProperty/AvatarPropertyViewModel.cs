@@ -281,6 +281,12 @@ internal sealed partial class AvatarPropertyViewModel : Abstraction.ViewModel, I
             return;
         }
 
+        if (result.StopReason is not BatchCultivateStopReason.None)
+        {
+            scopeContext.Messenger.Send(InfoBarMessage.Warning(SH.ViewModelCultivationEntryAddWarning));
+            return;
+        }
+
         scopeContext.Messenger.Send(CultivationProjectEntriesChangedMessage.Empty);
 
         InfoBarMessage message = result.SkippedCount > 0

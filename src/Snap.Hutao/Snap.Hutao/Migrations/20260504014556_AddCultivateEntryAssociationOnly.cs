@@ -19,7 +19,8 @@ namespace Snap.Hutao.Migrations
                 table: "cultivate_entries",
                 column: "RelatedEntryId",
                 principalTable: "cultivate_entries",
-                principalColumn: "InnerId");
+                principalColumn: "InnerId",
+                onDelete: ReferentialAction.SetNull);
         }
 
         /// <inheritdoc />

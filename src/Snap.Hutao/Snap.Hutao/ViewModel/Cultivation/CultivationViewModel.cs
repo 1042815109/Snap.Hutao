@@ -149,7 +149,12 @@ internal sealed partial class CultivationViewModel : Abstraction.ViewModel, IRec
         LocalSetting.Set(SettingKeys.CultivationRefreshInventoryByCalculatorToAllProjects, value);
     }
 
-    public async void Receive(CultivationProjectEntriesChangedMessage message)
+    public void Receive(CultivationProjectEntriesChangedMessage _)
+    {
+        ReceiveProjectEntriesChangedAsync().SafeForget();
+    }
+
+    private async ValueTask ReceiveProjectEntriesChangedAsync()
     {
         await taskContext.SwitchToMainThreadAsync();
         if (Projects?.CurrentItem is null)
@@ -379,6 +384,12 @@ internal sealed partial class CultivationViewModel : Abstraction.ViewModel, IRec
 
         if (batchResult is not { } result)
         {
+            return;
+        }
+
+        if (result.StopReason is not BatchCultivateStopReason.None)
+        {
+            messenger.Send(InfoBarMessage.Warning(SH.ViewModelCultivationEntryAddWarning));
             return;
         }
 

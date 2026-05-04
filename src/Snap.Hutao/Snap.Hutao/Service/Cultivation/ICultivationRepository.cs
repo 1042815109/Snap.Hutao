@@ -47,7 +47,7 @@ internal interface ICultivationRepository : IRepository<CultivateEntryLevelInfor
 
     /// <summary>
     /// 解析当前计划中指定角色的养成条目（类型为 CultivateType.AvatarAndSkill）。
-    /// 若存在多条历史记录，取条目主键 InnerId（Guid）较大的一条。
+    /// 若存在多条历史记录，取最近插入数据库的一条（按 SQLite rowid 倒序）。
     /// </summary>
     Guid? TryGetAvatarCultivateEntryInnerId(Guid projectId, uint avatarId);
 
