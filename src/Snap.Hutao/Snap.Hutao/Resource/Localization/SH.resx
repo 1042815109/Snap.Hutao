@@ -2516,6 +2516,9 @@
   <data name="ViewPageCultivationRefreshInventoryByEmbeddedYae" xml:space="preserve">
     <value>通过 Embedded Yae 同步</value>
   </data>
+  <data name="ViewPageCultivationRefreshInventoryAllPlansShortLabel" xml:space="preserve">
+    <value>背包同步影响所有计划</value>
+  </data>
   <data name="ViewPageCultivationRemoveEntry" xml:space="preserve">
     <value>删除清单</value>
   </data>

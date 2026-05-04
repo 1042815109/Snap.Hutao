@@ -27,6 +27,8 @@ internal interface ICultivationRepository : IRepository<CultivateEntryLevelInfor
 
     ObservableCollection<CultivateProject> GetCultivateProjectCollection();
 
+    ImmutableArray<Guid> GetCultivateProjectInnerIds();
+
     CultivateProject? GetCultivateProjectById(Guid projectId);
 
     void AddCultivateEntry(CultivateEntry entry);

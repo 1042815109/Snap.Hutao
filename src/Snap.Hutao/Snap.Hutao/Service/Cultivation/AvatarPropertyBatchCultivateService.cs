@@ -2,6 +2,7 @@
 // Licensed under the MIT license.
 
 using Microsoft.UI.Xaml.Controls;
+using Snap.Hutao.Core.Setting;
 using Snap.Hutao.Factory.ContentDialog;
 using Snap.Hutao.Model.Calculable;
 using Snap.Hutao.Model.Cultivation;
@@ -117,7 +118,10 @@ internal sealed partial class AvatarPropertyBatchCultivateService : IAvatarPrope
 
                     IInventoryService inventoryService = serviceProvider.GetRequiredService<IInventoryService>();
                     await inventoryService
-                        .RefreshInventoryAsync(RefreshOptions.CreateForWebCalculator(project, cultivationContext))
+                        .RefreshInventoryAsync(RefreshOptions.CreateForWebCalculator(
+                            project,
+                            cultivationContext,
+                            LocalSetting.Get(SettingKeys.CultivationRefreshInventoryByCalculatorToAllProjects, false)))
                         .ConfigureAwait(false);
                 }
             }

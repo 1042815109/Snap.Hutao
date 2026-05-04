@@ -102,6 +102,11 @@ internal sealed partial class CultivationRepository : ICultivationRepository
         return this.ObservableCollection<CultivateProject>();
     }
 
+    public ImmutableArray<Guid> GetCultivateProjectInnerIds()
+    {
+        return this.ImmutableArray<CultivateProject, Guid>(query => query.Select(p => p.InnerId));
+    }
+
     public void RemoveLevelInformationByEntryId(Guid entryId)
     {
         this.Delete<CultivateEntryLevelInformation>(l => l.EntryId == entryId);

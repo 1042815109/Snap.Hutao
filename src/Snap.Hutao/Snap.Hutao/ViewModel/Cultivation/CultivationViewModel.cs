@@ -90,6 +90,9 @@ internal sealed partial class CultivationViewModel : Abstraction.ViewModel, IRec
     public partial bool WeeklyBossMaterialInterchange { get; set; } = LocalSetting.Get(SettingKeys.CultivationStatisticsWeeklyBossMaterialInterchange, false);
 
     [ObservableProperty]
+    public partial bool SyncInventoryByCalculatorToAllProjects { get; set; } = LocalSetting.Get(SettingKeys.CultivationRefreshInventoryByCalculatorToAllProjects, false);
+
+    [ObservableProperty]
     public partial ObservableCollection<StatisticsCultivateItem>? StatisticsItems { get; set; }
 
     [ObservableProperty]
@@ -139,6 +142,11 @@ internal sealed partial class CultivationViewModel : Abstraction.ViewModel, IRec
     private void OnCurrentProjectChanged(object? sender, object? e)
     {
         UpdateEntryCollectionAsync(Projects?.CurrentItem).SafeForget();
+    }
+
+    partial void OnSyncInventoryByCalculatorToAllProjectsChanged(bool value)
+    {
+        LocalSetting.Set(SettingKeys.CultivationRefreshInventoryByCalculatorToAllProjects, value);
     }
 
     public async void Receive(CultivationProjectEntriesChangedMessage message)
@@ -322,7 +330,9 @@ internal sealed partial class CultivationViewModel : Abstraction.ViewModel, IRec
 
             using (await contentDialogFactory.BlockAsync(dialog).ConfigureAwait(false))
             {
-                await inventoryService.RefreshInventoryAsync(RefreshOptions.CreateForWebCalculator(Projects.CurrentItem, metadataContext)).ConfigureAwait(false);
+                await inventoryService
+                    .RefreshInventoryAsync(RefreshOptions.CreateForWebCalculator(Projects.CurrentItem, metadataContext, SyncInventoryByCalculatorToAllProjects))
+                    .ConfigureAwait(false);
 
                 await UpdateInventoryItemsAsync().ConfigureAwait(false);
                 await UpdateStatisticsItemsAsync().ConfigureAwait(false);

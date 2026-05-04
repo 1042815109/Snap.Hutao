@@ -2465,6 +2465,9 @@ Space Available: {2}</value>
   <data name="ViewPageCultivationRefreshInventoryByEmbeddedYae" xml:space="preserve">
     <value>Sync by Embedded Yae</value>
   </data>
+  <data name="ViewPageCultivationRefreshInventoryAllPlansShortLabel" xml:space="preserve">
+    <value>Inventory sync affects all plans</value>
+  </data>
   <data name="ViewPageCultivationRemoveEntry" xml:space="preserve">
     <value>Delete list</value>
   </data>
