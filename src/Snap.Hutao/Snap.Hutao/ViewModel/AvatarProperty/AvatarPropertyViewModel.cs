@@ -16,6 +16,7 @@ using Snap.Hutao.Service.AvatarInfo;
 using Snap.Hutao.Service.AvatarInfo.Factory;
 using Snap.Hutao.Service.Cultivation;
 using Snap.Hutao.Service.Cultivation.Consumption;
+using BatchCultivateResult = Snap.Hutao.Service.Cultivation.BatchCultivateResult;
 using Snap.Hutao.Service.Cultivation.Offline;
 using Snap.Hutao.Service.Metadata.ContextAbstraction;
 using Snap.Hutao.Service.Notification;
@@ -28,7 +29,6 @@ using Snap.Hutao.Web.Hoyolab.Takumi.Event.Calculate;
 using System.Collections.Immutable;
 using System.Globalization;
 using System.Runtime.CompilerServices;
-using CalculatorAvatarPromotionDelta = Snap.Hutao.Web.Hoyolab.Takumi.Event.Calculate.AvatarPromotionDelta;
 using CalculatorBatchConsumption = Snap.Hutao.Web.Hoyolab.Takumi.Event.Calculate.BatchConsumption;
 using CalculatorConsumption = Snap.Hutao.Web.Hoyolab.Takumi.Event.Calculate.Consumption;
 using CalculatorItemHelper = Snap.Hutao.Web.Hoyolab.Takumi.Event.Calculate.ItemHelper;
@@ -41,6 +41,7 @@ internal sealed partial class AvatarPropertyViewModel : Abstraction.ViewModel, I
 {
     private readonly ExclusiveTokenProvider refreshTokenProvider = new();
     private readonly AvatarPropertyViewModelScopeContext scopeContext;
+    private readonly IAvatarPropertyBatchCultivateService avatarPropertyBatchCultivateService;
 
     private SummaryFactoryMetadataContext? metadataContext;
 
@@ -270,67 +271,14 @@ internal sealed partial class AvatarPropertyViewModel : Abstraction.ViewModel, I
             targetAvatars = [.. avatars.Source];
         }
 
-        CultivateProjectAvatarPropertyBatchPreferences? batchPrefs = await scopeContext.CultivationService
-            .GetAvatarPropertyBatchCultivatePreferencesForCurrentProjectAsync()
+        ArgumentNullException.ThrowIfNull(metadataContext);
+        BatchCultivateResult? batchResult = await avatarPropertyBatchCultivateService
+            .ExecuteAsync(metadataContext, targetAvatars, CancellationToken)
             .ConfigureAwait(false);
 
-        CultivatePromotionDeltaBatchDialog dialog = batchPrefs is null
-            ? await scopeContext.ContentDialogFactory
-                .CreateInstanceAsync<CultivatePromotionDeltaBatchDialog>(scopeContext.ServiceProvider)
-                .ConfigureAwait(false)
-            : await scopeContext.ContentDialogFactory
-                .CreateInstanceAsync<CultivatePromotionDeltaBatchDialog>(scopeContext.ServiceProvider, batchPrefs)
-                .ConfigureAwait(false);
-
-        if (await dialog.GetPromotionDeltaBaselineAsync().ConfigureAwait(false) is not (true, { } baseline))
+        if (batchResult is not { } result)
         {
             return;
-        }
-
-        await scopeContext.CultivationService
-            .SaveAvatarPropertyBatchCultivatePreferencesForCurrentProjectAsync(ToAvatarPropertyBatchPreferences(baseline))
-            .ConfigureAwait(false);
-
-        ArgumentNullException.ThrowIfNull(baseline.Delta.Weapon);
-
-        ContentDialog progressDialog = await scopeContext.ContentDialogFactory
-            .CreateForIndeterminateProgressAsync(SH.ViewModelAvatarPropertyBatchCultivateProgressTitle)
-            .ConfigureAwait(false);
-
-        BatchCultivateResult result = default;
-        using (await scopeContext.ContentDialogFactory.BlockAsync(progressDialog).ConfigureAwait(false))
-        {
-            if (baseline.ClearAvatarAndWeaponEntriesBeforeSync)
-            {
-                await scopeContext.CultivationService.RemoveAvatarAndWeaponEntriesForCurrentProjectAsync().ConfigureAwait(false);
-            }
-
-            ImmutableArray<CalculatorAvatarPromotionDelta>.Builder deltasBuilder = ImmutableArray.CreateBuilder<CalculatorAvatarPromotionDelta>();
-            foreach (AvatarView avatar in targetAvatars)
-            {
-                if (!baseline.Delta.TryGetNonErrorCopy(avatar, out CalculatorAvatarPromotionDelta? copy))
-                {
-                    ++result.SkippedCount;
-                    continue;
-                }
-
-                deltasBuilder.Add(copy);
-            }
-
-            ImmutableArray<CalculatorAvatarPromotionDelta> deltas = deltasBuilder.ToImmutable();
-
-            ArgumentNullException.ThrowIfNull(metadataContext);
-            CalculatorBatchConsumption batchConsumption = OfflineCalculator.CalculateBatchConsumption(deltas, metadataContext);
-
-            foreach ((CalculatorConsumption consumption, CalculatorAvatarPromotionDelta delta) in batchConsumption.Items.Zip(deltas))
-            {
-                if (!await SaveCultivationAsync(consumption, new CultivatePromotionDeltaOptions(delta, baseline.Strategy), true).ConfigureAwait(false))
-                {
-                    break;
-                }
-
-                ++result.SucceedCount;
-            }
         }
 
         scopeContext.Messenger.Send(CultivationProjectEntriesChangedMessage.Empty);
@@ -340,31 +288,6 @@ internal sealed partial class AvatarPropertyViewModel : Abstraction.ViewModel, I
             : InfoBarMessage.Success(SH.FormatViewModelCultivationBatchAddCompleted(result.SucceedCount, result.SkippedCount));
 
         scopeContext.Messenger.Send(message);
-    }
-
-    private static CultivateProjectAvatarPropertyBatchPreferences ToAvatarPropertyBatchPreferences(CultivatePromotionDeltaOptions baseline)
-    {
-        CalculatorAvatarPromotionDelta d = baseline.Delta;
-        uint sa = 10;
-        uint se = 10;
-        uint sq = 10;
-        if (d.SkillList is [{ } a, { } e, { } q, ..])
-        {
-            sa = a.LevelTarget;
-            se = e.LevelTarget;
-            sq = q.LevelTarget;
-        }
-
-        return new CultivateProjectAvatarPropertyBatchPreferences
-        {
-            AvatarLevelTarget = d.AvatarLevelTarget,
-            SkillATarget = sa,
-            SkillETarget = se,
-            SkillQTarget = sq,
-            WeaponLevelTarget = d.Weapon?.LevelTarget ?? 90U,
-            ConsumptionSaveStrategyIndex = (int)baseline.Strategy,
-            ClearAvatarAndWeaponEntriesBeforeSync = baseline.ClearAvatarAndWeaponEntriesBeforeSync,
-        };
     }
 
     /// <returns><see langword="true"/> if we can continue saving consumptions, otherwise <see langword="false"/>.</returns>

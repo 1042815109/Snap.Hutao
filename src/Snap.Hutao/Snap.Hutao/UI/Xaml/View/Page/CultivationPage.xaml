@@ -467,6 +467,10 @@
                         CommandParameter="{Binding Projects.CurrentItem, Mode=OneWay}"
                         Icon="{shuxm:FontIcon Glyph=&#xE894;}"
                         Label="{shuxm:ResourceString Name=ViewPageCultivationClearInventory}"/>
+                    <AppBarButton
+                        Command="{Binding SyncAllAvatarsAndWeaponsCommand}"
+                        Icon="{shuxm:FontIcon Glyph=&#xE72C;}"
+                        Label="{shuxm:ResourceString Name=ViewPageCultivationSyncAllAvatarsAndWeapons}"/>
                     <AppBarButton Icon="{shuxm:FontIcon Glyph=&#xE895;}" Label="{shuxm:ResourceString Name=ViewPageCultivationRefreshInventory}">
                         <AppBarButton.Flyout>
                             <MenuFlyout Placement="BottomEdgeAlignedRight">
