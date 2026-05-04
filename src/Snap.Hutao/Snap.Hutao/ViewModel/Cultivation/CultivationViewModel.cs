@@ -103,6 +103,9 @@ internal sealed partial class CultivationViewModel : Abstraction.ViewModel, IRec
 
     protected override async ValueTask<bool> LoadOverrideAsync(CancellationToken token)
     {
+        messenger.UnregisterAll(this);
+        messenger.Register<CultivationProjectEntriesChangedMessage>(this);
+
         if (!await metadataService.InitializeAsync().ConfigureAwait(false))
         {
             return false;
@@ -133,6 +136,7 @@ internal sealed partial class CultivationViewModel : Abstraction.ViewModel, IRec
 
     protected override void UninitializeOverride()
     {
+        messenger.UnregisterAll(this);
         using (Projects?.SuppressChangeCurrentItem())
         {
             Projects = default;

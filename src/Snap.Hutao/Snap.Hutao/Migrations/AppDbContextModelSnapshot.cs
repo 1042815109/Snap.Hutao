@@ -595,7 +595,8 @@ namespace Snap.Hutao.Migrations
 
                     b.HasOne("Snap.Hutao.Model.Entity.CultivateEntry", "RelatedEntry")
                         .WithMany()
-                        .HasForeignKey("RelatedEntryId");
+                        .HasForeignKey("RelatedEntryId")
+                        .OnDelete(DeleteBehavior.SetNull);
 
                     b.Navigation("Project");
 
