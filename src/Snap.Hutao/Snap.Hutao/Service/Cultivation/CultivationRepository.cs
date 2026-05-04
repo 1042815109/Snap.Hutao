@@ -58,10 +58,18 @@ internal sealed partial class CultivationRepository : ICultivationRepository
         using (IServiceScope scope = ServiceProvider.CreateScope())
         {
             AppDbContext db = scope.GetAppDbContext();
+            // EF Core 不会为 SQLite 的隐式 rowid 自动建模；这里用原生 SQL 取最新插入的一条。
             return db.Set<CultivateEntry>()
+                .FromSqlInterpolated($"""
+                SELECT *
+                FROM cultivate_entries
+                WHERE ProjectId = {projectId}
+                  AND Id = {avatarId}
+                  AND Type = {(int)CultivateType.AvatarAndSkill}
+                ORDER BY rowid DESC
+                LIMIT 1
+                """)
                 .AsNoTracking()
-                .Where(e => e.ProjectId == projectId && e.Id == avatarId && e.Type == CultivateType.AvatarAndSkill)
-                .OrderByDescending(e => EF.Property<long>(e, "rowid"))
                 .Select(e => (Guid?)e.InnerId)
                 .FirstOrDefault();
         }
