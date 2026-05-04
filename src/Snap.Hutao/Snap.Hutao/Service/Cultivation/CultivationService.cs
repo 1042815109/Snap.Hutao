@@ -2,13 +2,16 @@
 // Licensed under the MIT license.
 
 using Snap.Hutao.Core.Database;
+using Snap.Hutao.Core.Text.Json;
 using Snap.Hutao.Model;
+using Snap.Hutao.Model.Cultivation;
 using Snap.Hutao.Model.Entity;
 using Snap.Hutao.Model.Entity.Primitive;
 using Snap.Hutao.Model.Intrinsic;
 using Snap.Hutao.Model.Metadata;
 using Snap.Hutao.Model.Metadata.Item;
 using Snap.Hutao.Model.Primitive;
+using Snap.Hutao.Service.Abstraction;
 using Snap.Hutao.Service.Cultivation.Consumption;
 using Snap.Hutao.Service.Inventory;
 using Snap.Hutao.Service.Metadata.ContextAbstraction;
@@ -20,6 +23,7 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using System.Text.Json;
 using ModelItem = Snap.Hutao.Model.Item;
 
 namespace Snap.Hutao.Service.Cultivation;
@@ -361,6 +365,50 @@ internal sealed partial class CultivationService : ICultivationService
         projects.MoveCurrentTo(project);
 
         return ProjectAddResultKind.Added;
+    }
+
+    public async ValueTask<CultivateProjectAvatarPropertyBatchPreferences?> GetAvatarPropertyBatchCultivatePreferencesForCurrentProjectAsync()
+    {
+        IAdvancedDbCollectionView<CultivateProject> projects = await GetProjectCollectionAsync().ConfigureAwait(false);
+        if (!await EnsureCurrentProjectAsync(projects).ConfigureAwait(false))
+        {
+            return null;
+        }
+
+        string? json = projects.CurrentItem?.AvatarPropertyBatchCultivatePreferencesJson;
+        if (string.IsNullOrWhiteSpace(json))
+        {
+            return null;
+        }
+
+        try
+        {
+            return JsonSerializer.Deserialize<CultivateProjectAvatarPropertyBatchPreferences>(json, JsonOptions.Default);
+        }
+        catch (JsonException)
+        {
+            return null;
+        }
+    }
+
+    public async ValueTask SaveAvatarPropertyBatchCultivatePreferencesForCurrentProjectAsync(CultivateProjectAvatarPropertyBatchPreferences preferences)
+    {
+        ArgumentNullException.ThrowIfNull(preferences);
+
+        IAdvancedDbCollectionView<CultivateProject> projects = await GetProjectCollectionAsync().ConfigureAwait(false);
+        if (!await EnsureCurrentProjectAsync(projects).ConfigureAwait(false))
+        {
+            return;
+        }
+
+        ArgumentNullException.ThrowIfNull(projects.CurrentItem);
+
+        CultivateProject project = projects.CurrentItem;
+
+        await taskContext.SwitchToBackgroundAsync();
+
+        project.AvatarPropertyBatchCultivatePreferencesJson = JsonSerializer.Serialize(preferences, JsonOptions.Default);
+        cultivationRepository.Update(project);
     }
 
     public async ValueTask RemoveProjectAsync(CultivateProject project)

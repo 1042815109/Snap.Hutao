@@ -9,6 +9,7 @@ using Snap.Hutao.Core.Setting;
 using Snap.Hutao.Factory.ContentDialog;
 using Snap.Hutao.Model;
 using Snap.Hutao.Model.Calculable;
+using Snap.Hutao.Model.Cultivation;
 using Snap.Hutao.Model.Entity.Primitive;
 using Snap.Hutao.Service;
 using Snap.Hutao.Service.AvatarInfo;
@@ -269,14 +270,26 @@ internal sealed partial class AvatarPropertyViewModel : Abstraction.ViewModel, I
             targetAvatars = [.. avatars.Source];
         }
 
-        CultivatePromotionDeltaBatchDialog dialog = await scopeContext.ContentDialogFactory
-            .CreateInstanceAsync<CultivatePromotionDeltaBatchDialog>(scopeContext.ServiceProvider)
+        CultivateProjectAvatarPropertyBatchPreferences? batchPrefs = await scopeContext.CultivationService
+            .GetAvatarPropertyBatchCultivatePreferencesForCurrentProjectAsync()
             .ConfigureAwait(false);
+
+        CultivatePromotionDeltaBatchDialog dialog = batchPrefs is null
+            ? await scopeContext.ContentDialogFactory
+                .CreateInstanceAsync<CultivatePromotionDeltaBatchDialog>(scopeContext.ServiceProvider)
+                .ConfigureAwait(false)
+            : await scopeContext.ContentDialogFactory
+                .CreateInstanceAsync<CultivatePromotionDeltaBatchDialog>(scopeContext.ServiceProvider, batchPrefs)
+                .ConfigureAwait(false);
 
         if (await dialog.GetPromotionDeltaBaselineAsync().ConfigureAwait(false) is not (true, { } baseline))
         {
             return;
         }
+
+        await scopeContext.CultivationService
+            .SaveAvatarPropertyBatchCultivatePreferencesForCurrentProjectAsync(ToAvatarPropertyBatchPreferences(baseline))
+            .ConfigureAwait(false);
 
         ArgumentNullException.ThrowIfNull(baseline.Delta.Weapon);
 
@@ -327,6 +340,31 @@ internal sealed partial class AvatarPropertyViewModel : Abstraction.ViewModel, I
             : InfoBarMessage.Success(SH.FormatViewModelCultivationBatchAddCompleted(result.SucceedCount, result.SkippedCount));
 
         scopeContext.Messenger.Send(message);
+    }
+
+    private static CultivateProjectAvatarPropertyBatchPreferences ToAvatarPropertyBatchPreferences(CultivatePromotionDeltaOptions baseline)
+    {
+        CalculatorAvatarPromotionDelta d = baseline.Delta;
+        uint sa = 10;
+        uint se = 10;
+        uint sq = 10;
+        if (d.SkillList is [{ } a, { } e, { } q, ..])
+        {
+            sa = a.LevelTarget;
+            se = e.LevelTarget;
+            sq = q.LevelTarget;
+        }
+
+        return new CultivateProjectAvatarPropertyBatchPreferences
+        {
+            AvatarLevelTarget = d.AvatarLevelTarget,
+            SkillATarget = sa,
+            SkillETarget = se,
+            SkillQTarget = sq,
+            WeaponLevelTarget = d.Weapon?.LevelTarget ?? 90U,
+            ConsumptionSaveStrategyIndex = (int)baseline.Strategy,
+            ClearAvatarAndWeaponEntriesBeforeSync = baseline.ClearAvatarAndWeaponEntriesBeforeSync,
+        };
     }
 
     /// <returns><see langword="true"/> if we can continue saving consumptions, otherwise <see langword="false"/>.</returns>

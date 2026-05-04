@@ -2,6 +2,7 @@
 // Licensed under the MIT license.
 
 using Snap.Hutao.Core.Database;
+using Snap.Hutao.Model.Cultivation;
 using Snap.Hutao.Model.Entity;
 using Snap.Hutao.Service.Cultivation.Consumption;
 using Snap.Hutao.ViewModel.Cultivation;
@@ -43,4 +44,14 @@ internal interface ICultivationService
     void SaveCultivateItem(CultivateItemView item);
 
     ValueTask<ProjectAddResultKind> TryAddProjectAsync(CultivateProject project);
+
+    /// <summary>
+    /// 读取当前选中养成计划下「我的角色」批量同步对话框的已保存选项；未保存时返回 <see langword="null"/>。
+    /// </summary>
+    ValueTask<CultivateProjectAvatarPropertyBatchPreferences?> GetAvatarPropertyBatchCultivatePreferencesForCurrentProjectAsync();
+
+    /// <summary>
+    /// 将批量同步对话框的选项写入当前选中养成计划。
+    /// </summary>
+    ValueTask SaveAvatarPropertyBatchCultivatePreferencesForCurrentProjectAsync(CultivateProjectAvatarPropertyBatchPreferences preferences);
 }

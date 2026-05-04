@@ -4,6 +4,7 @@
 using Microsoft.UI.Xaml.Controls;
 using Snap.Hutao.Core.Setting;
 using Snap.Hutao.Factory.ContentDialog;
+using Snap.Hutao.Model.Cultivation;
 using Snap.Hutao.Service.Cultivation.Consumption;
 using Snap.Hutao.Web.Hoyolab.Takumi.Event.Calculate;
 
@@ -15,8 +16,17 @@ internal sealed partial class CultivatePromotionDeltaBatchDialog : ContentDialog
 {
     private readonly IContentDialogFactory contentDialogFactory;
 
-    [GeneratedConstructor(InitializeComponent = true)]
-    public partial CultivatePromotionDeltaBatchDialog(IServiceProvider serviceProvider);
+    public CultivatePromotionDeltaBatchDialog(IServiceProvider serviceProvider, CultivateProjectAvatarPropertyBatchPreferences? initialPreferences = null)
+    {
+        InitializeComponent();
+
+        contentDialogFactory = serviceProvider.GetRequiredService<IContentDialogFactory>();
+
+        if (initialPreferences is not null)
+        {
+            ApplyInitialPreferences(initialPreferences);
+        }
+    }
 
     public async ValueTask<ValueResult<bool, CultivatePromotionDeltaOptions>> GetPromotionDeltaBaselineAsync()
     {
@@ -47,6 +57,26 @@ internal sealed partial class CultivatePromotionDeltaBatchDialog : ContentDialog
         }
 
         return new(true, new CultivatePromotionDeltaOptions(PromotionDelta, (ConsumptionSaveStrategyKind)SaveModeSelector.SelectedIndex, ClearAvatarAndWeaponEntriesBeforeSync));
+    }
+
+    private void ApplyInitialPreferences(CultivateProjectAvatarPropertyBatchPreferences p)
+    {
+        PromotionDelta.AvatarLevelTarget = p.AvatarLevelTarget;
+
+        if (PromotionDelta.SkillList is [{ } a, { } e, { } q, ..])
+        {
+            a.LevelTarget = p.SkillATarget;
+            e.LevelTarget = p.SkillETarget;
+            q.LevelTarget = p.SkillQTarget;
+        }
+
+        if (PromotionDelta.Weapon is { } w)
+        {
+            w.LevelTarget = p.WeaponLevelTarget;
+        }
+
+        SaveModeSelector.SelectedIndex = int.Clamp(p.ConsumptionSaveStrategyIndex, 0, 2);
+        ClearAvatarAndWeaponEntriesBeforeSync = p.ClearAvatarAndWeaponEntriesBeforeSync;
     }
 
     private static object CreatePromotionDeltaDefaultValue()
