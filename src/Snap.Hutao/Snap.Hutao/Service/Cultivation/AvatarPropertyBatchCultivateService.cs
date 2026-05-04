@@ -5,10 +5,17 @@ using Microsoft.UI.Xaml.Controls;
 using Snap.Hutao.Factory.ContentDialog;
 using Snap.Hutao.Model.Calculable;
 using Snap.Hutao.Model.Cultivation;
+using Snap.Hutao.Model.Entity;
 using Snap.Hutao.Model.Entity.Primitive;
+using Snap.Hutao.Model.Primitive;
+using Snap.Hutao.Service.AvatarInfo;
 using Snap.Hutao.Service.AvatarInfo.Factory;
 using Snap.Hutao.Service.Cultivation.Consumption;
 using Snap.Hutao.Service.Cultivation.Offline;
+using Snap.Hutao.Service.Inventory;
+using Snap.Hutao.Service.Metadata;
+using Snap.Hutao.Service.Metadata.ContextAbstraction;
+using Snap.Hutao.Service.User;
 using Snap.Hutao.UI.Xaml.View.Dialog;
 using Snap.Hutao.ViewModel.AvatarProperty;
 using Snap.Hutao.Web.Hoyolab.Takumi.Event.Calculate;
@@ -62,13 +69,66 @@ internal sealed partial class AvatarPropertyBatchCultivateService : IAvatarPrope
         BatchCultivateResult result = default;
         using (await contentDialogFactory.BlockAsync(progressDialog).ConfigureAwait(false))
         {
+            ImmutableArray<AvatarView> avatarsToProcess = targetAvatars;
+
+            if (baseline.SyncCharacterInfo)
+            {
+                IUserService userService = serviceProvider.GetRequiredService<IUserService>();
+                if (await userService.GetCurrentUserAndUidAsync().ConfigureAwait(false) is { } userAndUid)
+                {
+                    IServiceScopeFactory scopeFactory = serviceProvider.GetRequiredService<IServiceScopeFactory>();
+                    using (IServiceScope scope = scopeFactory.CreateScope())
+                    {
+                        IAvatarInfoService avatarInfoService = scope.ServiceProvider.GetRequiredService<IAvatarInfoService>();
+                        Summary? refreshed = await avatarInfoService
+                            .GetSummaryAsync(metadataContext, userAndUid, global::Snap.Hutao.Service.AvatarInfo.RefreshOptionKind.RequestFromHoyolabGameRecord, cancellationToken)
+                            .ConfigureAwait(false);
+
+                        if (refreshed?.Avatars.Source is { Count: > 0 } sourceAvatars)
+                        {
+                            HashSet<AvatarId> wanted = [.. targetAvatars.Select(static a => a.Id)];
+                            ImmutableArray<AvatarView>.Builder filtered = ImmutableArray.CreateBuilder<AvatarView>();
+                            foreach (AvatarView avatar in sourceAvatars)
+                            {
+                                if (wanted.Contains(avatar.Id))
+                                {
+                                    filtered.Add(avatar);
+                                }
+                            }
+
+                            if (filtered.Count > 0)
+                            {
+                                avatarsToProcess = filtered.ToImmutable();
+                            }
+                        }
+                    }
+                }
+            }
+
+            if (baseline.SyncInventoryItems)
+            {
+                CultivateProject? project = await cultivationService.GetCurrentProjectAsync().ConfigureAwait(false);
+                if (project is not null)
+                {
+                    IMetadataService metadataService = serviceProvider.GetRequiredService<IMetadataService>();
+                    ICultivationMetadataContext cultivationContext = await metadataService
+                        .GetContextAsync<CultivationMetadataContext>(cancellationToken)
+                        .ConfigureAwait(false);
+
+                    IInventoryService inventoryService = serviceProvider.GetRequiredService<IInventoryService>();
+                    await inventoryService
+                        .RefreshInventoryAsync(RefreshOptions.CreateForWebCalculator(project, cultivationContext))
+                        .ConfigureAwait(false);
+                }
+            }
+
             if (baseline.ClearAvatarAndWeaponEntriesBeforeSync)
             {
                 await cultivationService.RemoveAvatarAndWeaponEntriesForCurrentProjectAsync().ConfigureAwait(false);
             }
 
             ImmutableArray<CalculatorAvatarPromotionDelta>.Builder deltasBuilder = ImmutableArray.CreateBuilder<CalculatorAvatarPromotionDelta>();
-            foreach (AvatarView avatar in targetAvatars)
+            foreach (AvatarView avatar in avatarsToProcess)
             {
                 if (!baseline.Delta.TryGetNonErrorCopy(avatar, out CalculatorAvatarPromotionDelta? copy))
                 {
@@ -121,6 +181,8 @@ internal sealed partial class AvatarPropertyBatchCultivateService : IAvatarPrope
             WeaponLevelTarget = d.Weapon?.LevelTarget ?? 90U,
             ConsumptionSaveStrategyIndex = (int)baseline.Strategy,
             ClearAvatarAndWeaponEntriesBeforeSync = baseline.ClearAvatarAndWeaponEntriesBeforeSync,
+            SyncInventoryItems = baseline.SyncInventoryItems,
+            SyncCharacterInfo = baseline.SyncCharacterInfo,
         };
     }
 

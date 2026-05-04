@@ -12,6 +12,8 @@ namespace Snap.Hutao.UI.Xaml.View.Dialog;
 
 [DependencyProperty<AvatarPromotionDelta>("PromotionDelta", NotNull = true, CreateDefaultValueCallbackName = nameof(CreatePromotionDeltaDefaultValue))]
 [DependencyProperty<bool>("ClearAvatarAndWeaponEntriesBeforeSync", DefaultValue = false, NotNull = true)]
+[DependencyProperty<bool>("SyncInventoryItems", DefaultValue = false, NotNull = true)]
+[DependencyProperty<bool>("SyncCharacterInfo", DefaultValue = false, NotNull = true)]
 internal sealed partial class CultivatePromotionDeltaBatchDialog : ContentDialog
 {
     private readonly IContentDialogFactory contentDialogFactory;
@@ -56,7 +58,7 @@ internal sealed partial class CultivatePromotionDeltaBatchDialog : ContentDialog
             LocalSetting.Set(SettingKeys.CultivationWeapon90LevelTarget, weapon.LevelTarget);
         }
 
-        return new(true, new CultivatePromotionDeltaOptions(PromotionDelta, (ConsumptionSaveStrategyKind)SaveModeSelector.SelectedIndex, ClearAvatarAndWeaponEntriesBeforeSync));
+        return new(true, new CultivatePromotionDeltaOptions(PromotionDelta, (ConsumptionSaveStrategyKind)SaveModeSelector.SelectedIndex, ClearAvatarAndWeaponEntriesBeforeSync, SyncInventoryItems, SyncCharacterInfo));
     }
 
     private void ApplyInitialPreferences(CultivateProjectAvatarPropertyBatchPreferences p)
@@ -77,6 +79,8 @@ internal sealed partial class CultivatePromotionDeltaBatchDialog : ContentDialog
 
         SaveModeSelector.SelectedIndex = int.Clamp(p.ConsumptionSaveStrategyIndex, 0, 2);
         ClearAvatarAndWeaponEntriesBeforeSync = p.ClearAvatarAndWeaponEntriesBeforeSync;
+        SyncInventoryItems = p.SyncInventoryItems;
+        SyncCharacterInfo = p.SyncCharacterInfo;
     }
 
     private static object CreatePromotionDeltaDefaultValue()

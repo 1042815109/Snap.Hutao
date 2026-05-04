@@ -21,4 +21,14 @@ internal sealed class CultivateProjectAvatarPropertyBatchPreferences
     public int ConsumptionSaveStrategyIndex { get; set; }
 
     public bool ClearAvatarAndWeaponEntriesBeforeSync { get; set; }
+
+    /// <summary>
+    /// 执行批量前是否先通过养成计算器将游戏背包同步到当前计划（与养成计划「同步背包物品」一致）。
+    /// </summary>
+    public bool SyncInventoryItems { get; set; }
+
+    /// <summary>
+    /// 执行批量前是否先从米游社原神战绩同步「我的角色」数据（与我的角色「同步角色信息」一致）。
+    /// </summary>
+    public bool SyncCharacterInfo { get; set; }
 }
